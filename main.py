@@ -1,10 +1,9 @@
 import cv2
 import os
-from image_processing import adjustIntensity, equalizeIntensity
+import image_processing as imProc  # Asegúrate de que el archivo image_processing.py esté en el mismo directorio o en el path de Python
 
 # Función para leer una imagen y convertirla a escala de grises
 def read_and_process_image(image_path):
-    # Leer la imagen en escala de grises
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     
     if image is None:
@@ -16,16 +15,12 @@ def read_and_process_image(image_path):
 
 # Función para guardar la imagen en el directorio correspondiente a la función de procesamiento
 def save_processed_image(image, output_base_dir, filename, processing_function):
-    # Obtener el nombre de la función de procesamiento
-    func_name = processing_function.__name__
-    
-    # Crear un subdirectorio basado en el nombre de la función de procesamiento
-    output_directory = os.path.join(output_base_dir, func_name)
+    func_name = processing_function.__name__  # Nombre de la función de procesamiento
+    output_directory = os.path.join(output_base_dir, func_name)  # Crear subdirectorio para cada función
     os.makedirs(output_directory, exist_ok=True)
     
-    # Guardar la imagen en el directorio correspondiente
-    output_path = os.path.join(output_directory, filename)
-    image_to_save = (image * 255).astype('uint8')
+    output_path = os.path.join(output_directory, filename)  # Ruta de salida
+    image_to_save = (image * 255).astype('uint8')  # Convertir de vuelta a uint8 para guardar
     cv2.imwrite(output_path, image_to_save)
 
 
@@ -35,8 +30,13 @@ output_base_directory = "/home/plegide/Documents/FIC/4/VA/out_pruebas"
 
 # Diccionario que asocia funciones de procesamiento con sus parámetros específicos
 processing_functions = {
-    adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
-    equalizeIntensity: {"nBins": 128}  # Cambié el valor predeterminado a 128 para ilustrar
+    imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
+    imProc.equalizeIntensity: {"nBins": 128},
+    imProc.filterImage: {"kernel": [[1/9, 1/9, 1/9],
+                                     [1/9, 1/9, 1/9],
+                                     [1/9, 1/9, 1/9]]},
+    imProc.gaussianFilter: {"sigma": 1.0},  # Cambia el valor de sigma según sea necesario
+    imProc.medianFilter: {"filterSize": 3}  # Cambia el valor de filterSize según sea necesario
 }
 
 # Procesar todas las imágenes en el directorio de entrada
