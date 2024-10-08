@@ -32,19 +32,28 @@ def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
 def equalizeIntensity(inImage, nBins=256):
     validate_image(inImage)  # Validar la imagen de entrada
 
-    # Crear un histograma de la imagen
-    hist, bins = np.histogram(inImage.flatten(), nBins, [0, 1])
-    
+    # Obtener las dimensiones de la imagen
+    height, width = inImage.shape
+
+    # Crear un histograma vacío
+    hist = np.zeros(nBins)
+
+    # Calcular el histograma manualmente
+    for i in range(height):
+        for j in range(width):
+            pixel_value = int(inImage[i, j] * (nBins - 1))  # Escalar a [0, nBins-1]
+            hist[pixel_value] += 1
+
     # Calcular la función de distribución acumulativa (CDF)
     cdf = hist.cumsum()
-    
+
     # Normalizar la CDF
     cdf_normalized = cdf / cdf[-1]
-    
-    # Mapear los valores de la imagen de entrada usando la CDF
-    outImage = np.interp(inImage.flatten(), bins[:-1], cdf_normalized)
-    
+
+    # Usar np.interp para mapear los valores de la imagen de entrada usando la CDF
+    outImage = np.interp(inImage.flatten(), np.linspace(0, 1, nBins), cdf_normalized)
+
     # Volver a dar forma a la imagen de salida
     outImage = outImage.reshape(inImage.shape)
-    
+
     return outImage
