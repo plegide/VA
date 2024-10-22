@@ -164,4 +164,4 @@ cython_debug/
 # Ignore in_pruebas and out_pruebas folders
 in_pruebas/
 out_pruebas/
-gaussian_kernel.png
+kernel_gaussiano.png
