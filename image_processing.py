@@ -1,146 +1,96 @@
 import numpy as np
-
-# Función para validar que la imagen es una matriz 2D de punto flotante
-def validate_image(image):
-    if image.ndim != 2 or image.dtype not in [np.float32, np.float64]:
-        raise ValueError("La imagen de entrada debe ser una matriz 2D de punto flotante.")
+import matplotlib.pyplot as plt
 
 
-# Función para ajustar la intensidad (estiramiento lineal del histograma)
 def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
-    validate_image(inImage)  # Validar la imagen de entrada
 
-    # Obtener los límites de entrada
-    if len(inRange) == 0:
+    if len(inRange) == 0: # Si no se especifica el rango de entrada, se saca de la imagen
         imin, imax = np.min(inImage), np.max(inImage)
     else:
         imin, imax = inRange
-    
-    # Asegurarse de que los límites de salida estén bien definidos
-    omin, omax = outRange
-    
-    # Realizar el ajuste lineal
-    outImage = (inImage - imin) / (imax - imin) * (omax - omin) + omin
-    
-    # Clip para mantener los valores dentro del rango [0, 1]
-    outImage = np.clip(outImage, omin, omax)
+    omin, omax = outRange # Dividir el rango de salida en los valores mínimo y máximo
+
+    outImage = (inImage - imin) / (imax - imin) * (omax - omin) + omin # Aplicar la transformación lineal
     
     return outImage
 
 
-# Función para ecualizar el histograma
 def equalizeIntensity(inImage, nBins=256):
-    validate_image(inImage)  # Validar la imagen de entrada
 
-    # Obtener las dimensiones de la imagen
     height, width = inImage.shape
 
-    # Crear un histograma vacío
     hist = np.zeros(nBins)
-
-    # Calcular el histograma manualmente
-    for i in range(height):
+    for i in range(height): # Calcular el histograma de la imagen
         for j in range(width):
-            pixel_value = int(inImage[i, j] * (nBins - 1))  # Escalar a [0, nBins-1]
+            pixel_value = int(inImage[i, j] * (nBins - 1))  # Normalizar el valor del pixel a [0, nBins - 1]
             hist[pixel_value] += 1
 
-    # Calcular la función de distribución acumulativa (CDF)
-    cdf = hist.cumsum()
-
-    # Normalizar la CDF
-    cdf_normalized = cdf / cdf[-1]
-
-    # Usar np.interp para mapear los valores de la imagen de entrada usando la CDF
-    outImage = np.interp(inImage.flatten(), np.linspace(0, 1, nBins), cdf_normalized)
-
-    # Volver a dar forma a la imagen de salida
-    outImage = outImage.reshape(inImage.shape)
+    cdf = hist.cumsum() # Función de distribución acumulada
+    cdf_normalized = cdf / cdf[-1] # Normalizar la CDF
+    outImage = np.interp(inImage.flatten(), np.linspace(0, 1, nBins), cdf_normalized) # Interpolar la CDF para obtener la imagen de salida
+    outImage = outImage.reshape(inImage.shape) # Reajustar las dimensiones de la imagen
 
     return outImage
 
 
-# Función para aplicar el filtrado espacial mediante convolución
 def filterImage(inImage, kernel):
+
     kernel = np.array(kernel)  # Convertir el kernel a un array de numpy
-
-    validate_image(inImage)  # Validar la imagen de entrada
-
-    # Obtener las dimensiones de la imagen y del kernel
     img_height, img_width = inImage.shape
     k_height, k_width = kernel.shape
-
-    # Calcular el margen del kernel
-    pad_height = k_height // 2
+    pad_height = k_height // 2 # Calcular el padding
     pad_width = k_width // 2
 
-    # Crear una imagen de salida inicializada en ceros
-    outImage = np.zeros_like(inImage)
-
-    # Aplicar el padding a la imagen de entrada
-    padded_image = np.pad(inImage, ((pad_height, pad_height), (pad_width, pad_width)), mode='constant')
-
-    # Realizar la convolución
-    for i in range(img_height):
+    outImage = np.zeros_like(inImage) 
+    padded_image = np.pad(inImage, ((pad_height, pad_height), (pad_width, pad_width)), mode='reflect') # Aplicar padding
+    for i in range(img_height): # Convolucion
         for j in range(img_width):
-            # Extraer la región correspondiente de la imagen
-            region = padded_image[i:i + k_height, j:j + k_width]
-            # Aplicar la convolución (producto punto)
-            outImage[i, j] = np.sum(region * kernel)
+            region = padded_image[i:i + k_height, j:j + k_width] # Extraer la región correspondiente de la imagen
+            outImage[i, j] = np.sum(region * kernel) # Calcular la convolución y asignarla a la imagen de salida
 
     return outImage
 
 
 def gaussKernel1D(sigma):
-    # Calcular N a partir de sigma
-    N = int(2 * np.ceil(3 * sigma) + 1)
     
-    # Crear un vector de índice centrado
-    x = np.linspace(-(N // 2), N // 2, N)
+    N = int(2 * np.ceil(3 * sigma) + 1) # Calcular N a partir de sigma
+    x = np.linspace(-(N // 2), N // 2, N) # Crear un vector de índice centrado
+    kernel = np.exp(-(x ** 2) / (2 * sigma ** 2)) # Calcular el kernel gaussiano
+    kernel /= np.sum(kernel) # Normalizar el kernel
 
-    # Calcular el kernel gaussiano
-    kernel = np.exp(-(x ** 2) / (2 * sigma ** 2))
-
-    # Normalizar el kernel
-    kernel /= np.sum(kernel)
+        # Graficar la campana de Gauss
+    plt.figure(figsize=(8, 4))
+    plt.plot(x, kernel, label=f'Sigma = {sigma}', color='blue')
+    plt.title('Campana de Gauss')
+    plt.xlabel('x')
+    plt.ylabel('Valor del Kernel')
+    plt.axhline(0, color='black', lw=0.5, ls='--')
+    plt.axvline(0, color='black', lw=0.5, ls='--')
+    plt.grid()
+    plt.legend()
+    plt.show()
+    
     
     return kernel
 
 def gaussianFilter(inImage, sigma):
-    validate_image(inImage)  # Validar la imagen de entrada
 
-    # Crear el kernel gaussiano unidimensional
     kernel_1d = gaussKernel1D(sigma)
-
-    # Convolucionar primero con el kernel unidimensional
     temp_image = filterImage(inImage, kernel_1d.reshape(1, -1))  # Aplicar como filtro 1xN
-
-    # Convolucionar luego con el kernel transpuesto
-    outImage = filterImage(temp_image, kernel_1d.reshape(-1, 1))  # Aplicar como filtro Nx1
+    outImage = filterImage(temp_image, kernel_1d.reshape(-1, 1))  # Aplicar como filtro Nx1 traspuesto
 
     return outImage
 
 def medianFilter(inImage, filterSize):
-    validate_image(inImage)  # Validar la imagen de entrada
 
-    # Obtener las dimensiones de la imagen
     img_height, img_width = inImage.shape
-
-    # Calcular el margen del filtro
-    pad_height = filterSize // 2
-    pad_width = filterSize // 2
-
-    # Crear una imagen de salida inicializada en ceros
+    pad_size = filterSize // 2 # Calcular padding
     outImage = np.zeros_like(inImage)
+    padded_image = np.pad(inImage, ((pad_size, pad_size), (pad_size, pad_size)), mode='reflect')
 
-    # Aplicar el padding a la imagen de entrada
-    padded_image = np.pad(inImage, ((pad_height, pad_height), (pad_width, pad_width)), mode='reflect')
-
-    # Realizar el filtrado de mediana
-    for i in range(img_height):
+    for i in range(img_height): # Calcular la mediana
         for j in range(img_width):
-            # Extraer la región correspondiente de la imagen
-            region = padded_image[i:i + filterSize, j:j + filterSize]
-            # Calcular la mediana y asignarla a la imagen de salida
-            outImage[i, j] = np.median(region)
-            
+            region = padded_image[i:i + filterSize, j:j + filterSize] # Extraer la región de la imagen
+            outImage[i, j] = np.median(region) # Calcular la mediana de la region y asignarla a la imagen de salida
+    
     return outImage
