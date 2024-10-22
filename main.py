@@ -50,8 +50,8 @@ for filename in os.listdir(input_directory): # Todos los archivos en el director
 
 print("FIN")
 
-img = cv2.imread("/home/plegide/Documents/FIC/4/VA/in_pruebas/image2.png", cv2.IMREAD_GRAYSCALE)
-imgCV = cv2.filter2D(img, -1, np.array(imProc.gaussKernel1D(0.8)))
-imgCV = cv2.filter2D(imgCV, -1, np.array(imProc.gaussKernel1D(0.8)).T)
-cv2.imwrite("/home/plegide/Documents/FIC/4/VA/out_pruebas/cv2.png", imgCV)
+#img = cv2.imread("/home/plegide/Documents/FIC/4/VA/in_pruebas/image2.png", cv2.IMREAD_GRAYSCALE)
+#imgCV = cv2.filter2D(img, -1, np.array(imProc.gaussKernel1D(0.8)))
+#imgCV = cv2.filter2D(imgCV, -1, np.array(imProc.gaussKernel1D(0.8)).T)
+#cv2.imwrite("/home/plegide/Documents/FIC/4/VA/out_pruebas/cv2.png", imgCV)
 
