@@ -13,3 +13,5 @@ Cuando lleguemos a la parte de CANI probar un circulo negro con fondo blanco y u
 Pasan detector de plagio, con este y otros años.
 
 No se puede usar np.histogram pero en algun punto hay que hacer un histograma.
+
+Una imagen todo en negro con puntos blancos, se tiene que ver la gaussiana y si lo vuelves a pasar mini gaussianas. Para probar gaussiano.
