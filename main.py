@@ -31,11 +31,41 @@ output_base_directory = "/home/plegide/Documents/FIC/4/VA/out_pruebas"
 processing_functions = { # Diccionario de parametros para cada funcion
     #imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
     #imProc.equalizeIntensity: {"nBins": 128},
-    #imProc.filterImage: {"kernel": [[1/9, 1/9, 1/9],
-    #                                 [1/9, 1/9, 1/9],
-    #                                 [1/9, 1/9, 1/9]]},
-    imProc.gaussianFilter: {"sigma": 0.8},
-    #imProc.medianFilter: {"filterSize": 7}  
+    imProc.filterImage: {"kernel": [[1/9, 1/9, 1/9],
+                                     [1/9, 1/9, 1/9],
+                                     [1/9, 1/9, 1/9]]},
+    #imProc.gaussianFilter: {"sigma": 0.8},
+    #imProc.medianFilter: {"filterSize": 7}
+    # imProc.erode: {
+    #     "SE": np.array([[1, 1, 1],
+    #                     [1, 1, 1],
+    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
+    #     "center": []  # Calcula el centro automáticamente
+    # },
+    # imProc.dilate: {
+    #     "SE": np.array([[1, 1, 1],
+    #                     [1, 1, 1],
+    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
+    #     "center": []  # Calcula el centro automáticamente
+    # },
+    # imProc.opening: {
+    #     "SE": np.array([[1, 1, 1],
+    #                     [1, 1, 1],
+    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
+    #     "center": []  # Calcula el centro automáticamente
+    # },
+    # imProc.closing: {
+    #     "SE": np.array([[1, 1, 1],
+    #                     [1, 1, 1],
+    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
+    #     "center": []  # Calcula el centro automáticamente
+    # },
+    # imProc.fill: {
+    #     "seeds": np.array([[5, 5], [10, 10]]),  # Ejemplo de puntos semilla
+    #     "SE": np.array([[0, 1, 0],
+    #                     [1, 1, 1],
+    #                     [0, 1, 0]])  # Elemento estructurante de conectividad 4
+    # }  
 }
 
 

@@ -94,3 +94,104 @@ def medianFilter(inImage, filterSize):
             outImage[i, j] = np.median(region) # Calcular la mediana de la region y asignarla a la imagen de salida
     
     return outImage
+
+def erode(inImage, SE, center=[]):
+    img_height, img_width = inImage.shape
+    se_height, se_width = SE.shape
+    
+    # Calcular el centro del elemento estructurante si no se proporciona
+    if not center:
+        center = [(se_height // 2), (se_width // 2)]
+    
+    center_x, center_y = center
+    pad_height = se_height // 2
+    pad_width = se_width // 2
+    
+    # Crear una imagen de salida inicializada en ceros
+    outImage = np.zeros_like(inImage)
+    padded_image = np.pad(inImage, ((pad_height, pad_height), (pad_width, pad_width)), mode='constant')
+    
+    # Erosión
+    for i in range(img_height):
+        for j in range(img_width):
+            # Extraer la región correspondiente de la imagen
+            region = padded_image[i:i + se_height, j:j + se_width]
+            # Comprobar si la región puede ser erodida
+            if np.all(region * SE == SE):
+                outImage[i, j] = 1  # Erosiona
+            else:
+                outImage[i, j] = 0  # No erode
+
+    return outImage
+
+
+def dilate(inImage, SE, center=[]):
+    img_height, img_width = inImage.shape
+    se_height, se_width = SE.shape
+    
+    # Calcular el centro del elemento estructurante si no se proporciona
+    if not center:
+        center = [(se_height // 2), (se_width // 2)]
+    
+    center_x, center_y = center
+    pad_height = se_height // 2
+    pad_width = se_width // 2
+    
+    # Crear una imagen de salida inicializada en ceros
+    outImage = np.zeros_like(inImage)
+    padded_image = np.pad(inImage, ((pad_height, pad_height), (pad_width, pad_width)), mode='constant')
+    
+    # Dilatación
+    for i in range(img_height):
+        for j in range(img_width):
+            # Extraer la región correspondiente de la imagen
+            region = padded_image[i:i + se_height, j:j + se_width]
+            # Comprobar si el elemento estructurante puede ser dilatado
+            if np.any(region * SE):
+                outImage[i, j] = 1  # Dilata
+            else:
+                outImage[i, j] = 0  # No dilata
+
+    return outImage
+
+
+def opening(inImage, SE, center=[]):
+    """ Apertura = Erosión seguida de Dilatación """
+    return dilate(erode(inImage, SE, center), SE, center)
+
+
+def closing(inImage, SE, center=[]):
+    """ Cierre = Dilatación seguida de Erosión """
+    return erode(dilate(inImage, SE, center), SE, center)
+
+
+def fill(inImage, seeds, SE=[], center=[]):
+    img_height, img_width = inImage.shape
+    if not SE:  # Si no se proporciona elemento estructurante, usar conectividad 4
+        SE = np.array([[0, 1, 0],
+                       [1, 1, 1],
+                       [0, 1, 0]])
+    
+    # Inicializar la imagen de salida y marcar los puntos semilla
+    outImage = np.zeros_like(inImage)
+    for seed in seeds:
+        outImage[seed[0], seed[1]] = 1  # Marcamos el punto semilla
+    
+    # Realizar el llenado
+    changed = True
+    while changed:
+        changed = False
+        for i in range(img_height):
+            for j in range(img_width):
+                if outImage[i, j] == 1:  # Solo considerar píxeles marcados
+                    # Comprobar los vecinos
+                    for di in range(-1, 2):
+                        for dj in range(-1, 2):
+                            ni, nj = i + di, j + dj
+                            if 0 <= ni < img_height and 0 <= nj < img_width:
+                                if SE[di + 1, dj + 1] == 1 and inImage[ni, nj] == 1 and outImage[ni, nj] == 0:
+                                    outImage[ni, nj] = 1
+                                    changed = True
+
+    return outImage
+
