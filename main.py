@@ -18,70 +18,127 @@ def save_processed_image(image, output_base_dir, filename, processing_function):
     func_name = processing_function.__name__
     output_directory = os.path.join(output_base_dir, func_name) # Se crea una carpeta para cada función de procesamiento
     os.makedirs(output_directory, exist_ok=True)
-    output_path = os.path.join(output_directory, filename) 
+    output_path = os.path.join(output_directory, filename)
+    image_to_save = (image * 255).astype('uint8')  # Escalar la imagen a [0, 255] y convertirla a uint8
+    cv2.imwrite(output_path, image_to_save)
+
+def save_processed_tuple(image, output_base_dir, filename, processing_function, axis):
+
+    func_name = processing_function.__name__ + axis
+    output_directory = os.path.join(output_base_dir, func_name) # Se crea una carpeta para cada función de procesamiento
+    os.makedirs(output_directory, exist_ok=True)
+    output_path = os.path.join(output_directory, filename)
     image_to_save = (image * 255).astype('uint8')  # Escalar la imagen a [0, 255] y convertirla a uint8
     cv2.imwrite(output_path, image_to_save)
 
 
 # Rutas de los directorios de entrada y salida
-input_directory = "/home/plegide/Documents/FIC/4/VA/in_pruebas"
-output_base_directory = "/home/plegide/Documents/FIC/4/VA/out_pruebas"
+# input_directory = "/home/plegide/Documents/FIC/4/VA/in_pruebas"
+# output_base_directory = "/home/plegide/Documents/FIC/4/VA/out_pruebas"
 
+input_directory = "/home/plegide/Documents/FIC/4/VA/prueba"
+output_base_directory = "/home/plegide/Documents/FIC/4/VA/resultado"
 
 processing_functions = { # Diccionario de parametros para cada funcion
     #imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
     #imProc.equalizeIntensity: {"nBins": 128},
-    imProc.filterImage: {"kernel": [[1/9, 1/9, 1/9],
-                                     [1/9, 1/9, 1/9],
-                                     [1/9, 1/9, 1/9]]},
+    # imProc.filterImage: {"kernel": [[1/9, 1/9, 1/9],
+    #                                  [1/9, 1/9, 1/9],
+    #                                  [1/9, 1/9, 1/9]]},
     #imProc.gaussianFilter: {"sigma": 0.8},
     #imProc.medianFilter: {"filterSize": 7}
-    # imProc.erode: {
-    #     "SE": np.array([[1, 1, 1],
+    #  imProc.erode: {
+    #      "SE": np.array([[0, 0, 1, 0, 0],
+    #                     [0, 1, 1, 1, 0],
+    #                     [1, 1, 1, 1, 1],
+    #                     [0, 1, 1, 1, 0],
+    #                     [0, 0, 1, 0, 0]]),
+    #      "center": []
+    #  },
+    #  imProc.dilate: {
+    #      "SE": np.array([[0, 0, 0],
     #                     [1, 1, 1],
-    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
-    #     "center": []  # Calcula el centro automáticamente
-    # },
-    # imProc.dilate: {
-    #     "SE": np.array([[1, 1, 1],
-    #                     [1, 1, 1],
-    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
-    #     "center": []  # Calcula el centro automáticamente
-    # },
+    #                     [0, 0, 0]]),  # Elemento estructurante 3x3
+    #      "center": []  # Calcula el centro automáticamente
+    #  },
     # imProc.opening: {
     #     "SE": np.array([[1, 1, 1],
     #                     [1, 1, 1],
-    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
+    #                     [1, 1, 1]]),
     #     "center": []  # Calcula el centro automáticamente
     # },
     # imProc.closing: {
     #     "SE": np.array([[1, 1, 1],
     #                     [1, 1, 1],
-    #                     [1, 1, 1]]),  # Elemento estructurante 3x3
+    #                     [1, 1, 1]]),
     #     "center": []  # Calcula el centro automáticamente
     # },
     # imProc.fill: {
-    #     "seeds": np.array([[5, 5], [10, 10]]),  # Ejemplo de puntos semilla
-    #     "SE": np.array([[0, 1, 0],
-    #                     [1, 1, 1],
-    #                     [0, 1, 0]])  # Elemento estructurante de conectividad 4
-    # }  
+    #     "seeds": np.array([[7,3]]),
+    #     "SE": np.array([[1, 1, 1]]),
+    #     "center": []
+    # },
+    # imProc.gradientImage: {
+    #     "operator": "Roberts"  # Puede ser Sobel, Roberts CentralDiff o Prewitt
+    # },
+    # imProc.LoG: {
+    #     "sigma": 1.0
+    # },
+    imProc.edgeCanny: {
+        "sigma": 1.0,
+        "tlow": 0.1,
+        "thigh": 0.3
+    }
 }
 
-
-for filename in os.listdir(input_directory): # Todos los archivos en el directorio de entrada
+for filename in os.listdir(input_directory):  # Todos los archivos en el directorio de entrada
     if filename.endswith(('.jpg', '.jpeg', '.png')):  # Solo se procesan archivos de imagen
         input_image_path = os.path.join(input_directory, filename)
         image = read_and_process_image(input_image_path)
-        for processing_function, params in processing_functions.items(): # Aplicar funciones y parametros del diccionario
-            
-            processed_image = processing_function(image, **params)
-            save_processed_image(processed_image, output_base_directory, filename, processing_function)
+        
+        for processing_function, params in processing_functions.items():
+            if processing_function.__name__ == "gradientImage":
+                processed_imageX, processed_imageY = processing_function(image, **params) # Aplicar funciones y parámetros del diccionario 
+                save_processed_tuple(processed_imageX, output_base_directory, filename , processing_function, "X")
+                save_processed_tuple(processed_imageY, output_base_directory, filename, processing_function, "Y")
+            else:
+                processed_image = processing_function(image, **params)
+                save_processed_image(processed_image, output_base_directory, filename, processing_function)
 
 print("FIN")
+
 
 #img = cv2.imread("/home/plegide/Documents/FIC/4/VA/in_pruebas/image2.png", cv2.IMREAD_GRAYSCALE)
 #imgCV = cv2.filter2D(img, -1, np.array(imProc.gaussKernel1D(0.8)))
 #imgCV = cv2.filter2D(imgCV, -1, np.array(imProc.gaussKernel1D(0.8)).T)
 #cv2.imwrite("/home/plegide/Documents/FIC/4/VA/out_pruebas/cv2.png", imgCV)
 
+
+# def create_image_from_list(pixel_data, output_path):
+#     """
+#     Crea y guarda una imagen en escala de grises a partir de una lista de listas binaria.
+    
+#     Args:
+#         pixel_data (list of list of int): Lista de listas que contiene 1 para píxeles blancos y 0 para píxeles negros.
+#         output_path (str): Ruta para guardar la imagen resultante.
+#     """
+#     # Convertir la lista de listas en un array de numpy
+#     pixel_array = np.array(pixel_data, dtype=np.uint8) * 255  # Multiplicamos por 255 para que 1 sea blanco (255) y 0 sea negro (0)
+    
+#     # Guardar la imagen
+#     cv2.imwrite(output_path, pixel_array)
+
+# # Probar con SE cuadrado, circulo y cruz
+# pixel_data = [
+#     [1, 0, 0, 0],
+#     [1, 0, 0, 0],
+#     [0, 1, 1, 0],
+#     [0, 1, 0, 0],
+#     [0, 1, 0, 0],
+# ]
+# output_path = "/home/plegide/Documents/FIC/4/VA/morfGenerada.png"
+# create_image_from_list(pixel_data, output_path)
+# image = read_and_process_image(output_path)
+# eroded_image = imProc.dilate(image, np.array([[1,0,1]]), [])
+# image_to_save = (eroded_image * 255).astype('uint8')
+# cv2.imwrite("/home/plegide/Documents/FIC/4/VA/out_pruebas/morfEroded.png", image_to_save)
