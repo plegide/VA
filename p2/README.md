@@ -4,7 +4,7 @@
 
 - El ojo es una esfera que ve al reves, la inversion que hace el telescopio lo hacemos en el cerebro. Las miodiopsias son los puntitos, cuando se joroba el humor vitreo hace densidades que hacen que no pase la luz limpia y ves las manchitas grises. Lo que pasa es que el ojo las calibra. La pupila en el fondo de ojo abre o cierra absorbiendo mas o menos luz, en zonas oscuras abre, en zonas claras cierra y lo proyecta en la zona foveal, donde hay muchisimos fotoreceptores, que absorven y procesan la luz. El nervio optico hace que todo funcione a la perfeccion con las venas y arterias.
 
-Las patologias afectan a la copa del nervio optico (el glaucoma es la mas tipica, falta riego en la zona periferica y perdemos angulo de vision, poco a poco), o a la fovea (son las peores) cuanto mas cerca del centro peor, de la agudeza visual.
+- Las patologias afectan a la copa del nervio optico (el glaucoma es la mas tipica, falta riego en la zona periferica y perdemos angulo de vision, poco a poco), o a la fovea (son las peores) cuanto mas cerca del centro peor, de la agudeza visual.
 
 
 - Imagenes de nervio optico. Hay otro dataset con mas imagenes. 
