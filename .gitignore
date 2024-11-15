@@ -161,9 +161,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Ignore in_pruebas and out_pruebas folders
-in_pruebas/
-out_pruebas/
-small_result/
-small_sample
-kernel_gaussiano.png
+# p1
+p1/in_pruebas/
+p1/out_pruebas/
+p1/small_result/
+p1/small_sample/
+p1/kernel_gaussiano.png
+
+# p2
+p2/Material Glaucoma
