@@ -341,49 +341,36 @@ def hysteresis(suppressed_image, gradient_direction, tlow, thigh, neighbor_depth
 
 
 def edgeCanny(inImage, sigma, tlow, thigh):
-    # Paso 1: Aplicar suavizado gaussiano
-    smoothed_image = gaussianFilter(inImage, sigma)
-    
-    # Paso 2: Calcular el gradiente usando el operador Sobel
-    gx, gy = gradientImage(smoothed_image, "Sobel")
+
+    smoothed_image = gaussianFilter(inImage, sigma) #Suavizado gaussiano
+
+    gx, gy = gradientImage(smoothed_image, "Sobel") # Gradiente con Sobel
     magnitude = np.sqrt(gx ** 2 + gy ** 2)
-    gradient_direction = np.degrees(np.arctan2(gy, gx))  # Convertir a grados
+    gradient_direction = np.degrees(np.arctan2(gy, gx))
+
+    suppressed_image = nonMaximumSuppression(magnitude, gradient_direction) # Supresión no máxima
     
-    # Paso 3: Supresión no máxima
-    suppressed_image = nonMaximumSuppression(magnitude, gradient_direction)
+    final_image = hysteresis(suppressed_image, gradient_direction, tlow, thigh) # Histeresis
     
-    # Paso 4: Umbralización con histéresis
-    final_image = hysteresis(suppressed_image, gradient_direction, tlow, thigh)
-    
-    # Crear una nueva ventana de figura para cada imagen
+    # Visualizar los pasos
     plt.figure(figsize=(10, 8))
     plt.suptitle("Resultados de Canny")
-    
-    # Mostrar suavizado gaussiano
     plt.subplot(2, 2, 1)
     plt.title("Suavizado Gaussiano")
     plt.imshow(smoothed_image, cmap="gray")
     plt.axis("off")
-    
-    # Mostrar magnitud del gradiente
     plt.subplot(2, 2, 2)
     plt.title("Magnitud del Gradiente")
     plt.imshow(magnitude, cmap="gray")
     plt.axis("off")
-    
-    # Mostrar supresión no máxima
     plt.subplot(2, 2, 3)
     plt.title("Supresión No Máxima")
     plt.imshow(suppressed_image, cmap="gray")
     plt.axis("off")
-    
-    # Mostrar histeresis
     plt.subplot(2, 2, 4)
     plt.title("Histeresis")
     plt.imshow(final_image, cmap="gray")
     plt.axis("off")
-    
-    # Ajustar para que los subplots no se solapen
     plt.tight_layout()
     plt.show()
 
