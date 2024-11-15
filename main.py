@@ -10,7 +10,7 @@ def read_and_process_image(image_path):
     if image is None:
         raise ValueError(f"No se puede cargar la imagen en la ruta: {image_path}")
 
-    return image.astype(float) / 255.0 # Normalizar la imagen a [0, 1]
+    return image / 255.0 # Normalizar la imagen a [0, 1]
 
 
 def save_processed_image(image, output_base_dir, filename, processing_function):
@@ -19,7 +19,7 @@ def save_processed_image(image, output_base_dir, filename, processing_function):
     output_directory = os.path.join(output_base_dir, func_name) # Se crea una carpeta para cada función de procesamiento
     os.makedirs(output_directory, exist_ok=True)
     output_path = os.path.join(output_directory, filename)
-    image_to_save = (image * 255).astype('uint8')  # Escalar la imagen a [0, 255] y convertirla a uint8
+    image_to_save = image * 255.0  # Escalar la imagen a [0, 255] y convertirla a uint8
     cv2.imwrite(output_path, image_to_save)
 
 def save_processed_tuple(image, output_base_dir, filename, processing_function, axis):
@@ -28,7 +28,8 @@ def save_processed_tuple(image, output_base_dir, filename, processing_function, 
     output_directory = os.path.join(output_base_dir, func_name) # Se crea una carpeta para cada función de procesamiento
     os.makedirs(output_directory, exist_ok=True)
     output_path = os.path.join(output_directory, filename)
-    image_to_save = (image * 255).astype('uint8')  # Escalar la imagen a [0, 255] y convertirla a uint8
+    image_to_save = image * 255.0  # Escalar la imagen a [0, 255] y convertirla a uint8
+    #np.clip(image_to_save, 0, 255)
     cv2.imwrite(output_path, image_to_save)
 
 
@@ -36,8 +37,8 @@ def save_processed_tuple(image, output_base_dir, filename, processing_function, 
 # input_directory = "/home/plegide/Documents/FIC/4/VA/in_pruebas"
 # output_base_directory = "/home/plegide/Documents/FIC/4/VA/out_pruebas"
 
-input_directory = "/home/plegide/Documents/FIC/4/VA/prueba"
-output_base_directory = "/home/plegide/Documents/FIC/4/VA/resultado"
+input_directory = "/home/plegide/Documents/FIC/4/VA/small_sample"
+output_base_directory = "/home/plegide/Documents/FIC/4/VA/small_result"
 
 processing_functions = { # Diccionario de parametros para cada funcion
     #imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
@@ -78,14 +79,14 @@ processing_functions = { # Diccionario de parametros para cada funcion
     #     "SE": np.array([[1, 1, 1]]),
     #     "center": []
     # },
-    # imProc.gradientImage: {
-    #     "operator": "Roberts"  # Puede ser Sobel, Roberts CentralDiff o Prewitt
-    # },
+    #  imProc.gradientImage: {
+    #      "operator": "Sobel"  # Puede ser Sobel, Roberts CentralDiff o Prewitt
+    #  },
     # imProc.LoG: {
     #     "sigma": 1.0
     # },
     imProc.edgeCanny: {
-        "sigma": 1.0,
+        "sigma": 0.8,
         "tlow": 0.1,
         "thigh": 0.3
     }
@@ -103,6 +104,7 @@ for filename in os.listdir(input_directory):  # Todos los archivos en el directo
                 save_processed_tuple(processed_imageY, output_base_directory, filename, processing_function, "Y")
             else:
                 processed_image = processing_function(image, **params)
+                #processed_image = imProc.adjustIntensity(processed_image, [], [0, 1])
                 save_processed_image(processed_image, output_base_directory, filename, processing_function)
 
 print("FIN")
@@ -136,9 +138,10 @@ print("FIN")
 #     [0, 1, 0, 0],
 #     [0, 1, 0, 0],
 # ]
-# output_path = "/home/plegide/Documents/FIC/4/VA/morfGenerada.png"
+# output_path = "/home/plegide/Documents/FIC/4/VA/in_pruebas/morphGenerada.png"
 # create_image_from_list(pixel_data, output_path)
 # image = read_and_process_image(output_path)
-# eroded_image = imProc.dilate(image, np.array([[1,0,1]]), [])
-# image_to_save = (eroded_image * 255).astype('uint8')
+# morphed_image = imProc.dilate(image, np.array([[1,0,1]]), [])
+# image_to_save = (morphed_image * 255).astype('uint8')
 # cv2.imwrite("/home/plegide/Documents/FIC/4/VA/out_pruebas/morfEroded.png", image_to_save)
+# print("FIN")

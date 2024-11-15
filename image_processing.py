@@ -1,6 +1,6 @@
 import numpy as np
+from collections import deque
 import matplotlib.pyplot as plt
-import cv2
 
 
 # ----------------------------------------- HISTOGRAMAS: MEJORA DE CONTRASTE -----------------------------------------
@@ -112,7 +112,7 @@ def erode(inImage, SE, center=[]):
     img_height, img_width = inImage.shape
     se_height, se_width = SE.shape
     if not center:
-        center = [(se_height // 2), (se_width // 2)]
+        center = [(se_height // 2), (se_width // 2)] 
     center_x, center_y = center
     
     pad_top = center_x  # El padding se calcula en funcion del centro del SE
@@ -217,7 +217,7 @@ def fill(inImage, seeds, SE=[], center=[]):
 
 
 def gradientImage(inImage, operator):
-    # Definir los kernels de cada operador
+
     if operator == 'Roberts':
         Gx = np.array([[1, 0], [0, -1]])
         Gy = np.array([[0, 1], [-1, 0]])
@@ -232,168 +232,159 @@ def gradientImage(inImage, operator):
 
     elif operator == 'Sobel':
         Gx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
-        Gy = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
+        Gy = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
 
     else:
-        raise ValueError("Operador no válido. Use 'Roberts', 'CentralDiff', 'Prewitt' o 'Sobel'.")
+        raise ValueError("El kernel tiene que ser: 'Roberts', 'CentralDiff', 'Prewitt' o 'Sobel'")
 
-    # Calcular las componentes del gradiente usando filterImage
     gx = filterImage(inImage, Gx)
     gy = filterImage(inImage, Gy)
-
     return [gx, gy]
 
 
-def zeroCrossingDetection(image, threshold):
-    img_height, img_width = image.shape
-    zero_crossing_image = np.zeros_like(image, dtype=np.uint8)
-
-    for i in range(1, img_height - 1):
-        for j in range(1, img_width - 1):
-            # Verificar si el píxel en (i, j) es menor que -threshold
-            if image[i, j] < -threshold:
-                # Verificar si alguno de sus ocho vecinos es mayor que threshold
-                if (image[i-1:i+2, j-1:j+2] > threshold).any():
-                    zero_crossing_image[i, j] = 1  # Marcar como cruce por cero
-
-    return zero_crossing_image
-
-
 def LoG(inImage, sigma):
+    # Calcular tamaño del kernel
+    N = int(2 * np.ceil(3 * sigma) + 1)  # Tamaño del kernel basado en sigma
+    kernel = np.zeros((N, N))  # Inicializar el kernel de tamaño N x N
+    
+    # Constante de normalización NO VA
+    c = -1 / (np.pi * sigma**4)
+    
+    # Coordenadas del centro del kernel
+    center = N // 2
 
-    smoothed_image = gaussianFilter(inImage, sigma)
-    laplacian_kernel = np.array([[0, -1, 0],
-                                 [-1, 4, -1],
-                                 [0, -1, 0]])
-    masked_image = filterImage(smoothed_image, laplacian_kernel)
-    outImage = zeroCrossingDetection(masked_image, 0.01)
+    # Llenar el kernel LoG
+    for x in range(N):
+        for y in range(N):
+            # Calcular x_rel y y_rel como distancia al centro del kernel
+            x_rel = x - center
+            y_rel = y - center
+            
+            # Calcular valor del Laplaciano de Gaussiano
+            kernel[x, y] = ((x_rel**2 + y_rel**2 - sigma**2) / sigma**4) * np.exp(-(x_rel**2 + y_rel**2) / (2 * sigma**2))
+
+    # Aplicar el filtro a la imagen de entrada usando convolución
+    kernel = kernel - np.mean(kernel)  # Restar la media del kernel
+    outImage = filterImage(inImage, kernel)
     
     return outImage
 
 
-# ----------------------------------------- SUPRESIÓN NO MÁXIMA -----------------------------------------
-
-
 def nonMaximumSuppression(magnitude, gradient_direction):
+
     img_height, img_width = magnitude.shape
     suppressed_image = np.zeros((img_height, img_width), dtype=np.float32)
-    # Normalizar la dirección del gradiente a [0, 180)
-    gradient_direction = gradient_direction % 180
+    gradient_direction = gradient_direction % 180 # Normalizar el angulo a [0,180)
     
     for i in range(1, img_height - 1):
         for j in range(1, img_width - 1):
             angle = gradient_direction[i, j]
-            current_magnitude = magnitude[i, j]
-            
-            # Comparar con el píxel en la dirección del gradiente
+            current_magnitude = magnitude[i, j]   
+            # Comparar cada pixel con el que esta en la direccion del gradiente
             if (0 <= angle < 22.5) or (157.5 <= angle < 180): # 0 o 180 vecinos en los lados izquierdo y derecho
                 neighbor_1 = magnitude[i, j - 1]
                 neighbor_2 = magnitude[i, j + 1]
-            elif 22.5 <= angle < 67.5: # 45 vecinos en las posiciones diagonal superior derecha e inferior izquierda
-                neighbor_1 = magnitude[i - 1, j + 1]
-                neighbor_2 = magnitude[i + 1, j - 1]
+            elif 22.5 <= angle < 67.5: # 45 vecinos en las posiciones diagonal superior izquierda e inferior derecha
+                neighbor_1 = magnitude[i - 1, j - 1]
+                neighbor_2 = magnitude[i + 1, j + 1]
+                
             elif 67.5 <= angle < 112.5: # 90 vecinos arriba y abajo
                 neighbor_1 = magnitude[i - 1, j]
                 neighbor_2 = magnitude[i + 1, j]
-            else:  # 112.5 <= angle < 157.5 135  vecinos en las posiciones diagonal superior izquierda e inferior derecha
-                neighbor_1 = magnitude[i - 1, j - 1]
-                neighbor_2 = magnitude[i + 1, j + 1]
+            else:  # 112.5 <= angle < 157.5 135  vecinos en las posiciones diagonal superior derecha e inferior izquierda
+                neighbor_1 = magnitude[i - 1, j + 1]
+                neighbor_2 = magnitude[i + 1, j - 1]
 
-            # Suprimir píxeles no máximos
-            if current_magnitude >= neighbor_1 and current_magnitude >= neighbor_2:
+            if current_magnitude >= neighbor_1 and current_magnitude >= neighbor_2: # Si no es maximo
                 suppressed_image[i, j] = current_magnitude
 
     return suppressed_image
 
-# ----------------------------------------- HISTÉRESIS -----------------------------------------
 
-
-def hysteresis(suppressed_image, gradient_direction, tlow, thigh):
-    # Inicializar la imagen de salida con ceros (sin bordes)
+def hysteresis(suppressed_image, gradient_direction, tlow, thigh, neighbor_depth=3):
     output_image = np.zeros_like(suppressed_image)
-    
-    # Marcar los bordes fuertes con 1.0
-    strong_edges = suppressed_image >= thigh
-    output_image[strong_edges] = 1.0
-    
-    # Crear una imagen de visita para evitar recorrer puntos ya procesados
-    visited = np.zeros_like(suppressed_image, dtype=bool)
-    
-    # Recorrer la imagen para encontrar bordes fuertes y rastrear hacia los débiles
     img_height, img_width = suppressed_image.shape
-    
-    # Normalizar la dirección del gradiente a [0, 180)
-    gradient_direction = gradient_direction % 180
-    
-    # Función para rastrear el borde en función de la dirección del gradiente
-    def trace_edge(i, j, angle):
-        visited[i, j] = True
-        output_image[i, j] = 1.0  # Marcar el borde como fuerte
-        
-        # Comparar con los vecinos según la dirección del gradiente
-        if (0 <= angle < 22.5) or (157.5 <= angle < 180):  # 0 o 180 grados: izquierda y derecha
-            neighbor_1 = suppressed_image[i, j - 1]
-            neighbor_2 = suppressed_image[i, j + 1]
-        elif 22.5 <= angle < 67.5:  # 45 grados: diagonal superior derecha e inferior izquierda
-            neighbor_1 = suppressed_image[i - 1, j + 1]
-            neighbor_2 = suppressed_image[i + 1, j - 1]
-        elif 67.5 <= angle < 112.5:  # 90 grados: arriba y abajo
-            neighbor_1 = suppressed_image[i - 1, j]
-            neighbor_2 = suppressed_image[i + 1, j]
-        else:  # 112.5 <= angle < 157.5: diagonal superior izquierda e inferior derecha
-            neighbor_1 = suppressed_image[i - 1, j - 1]
-            neighbor_2 = suppressed_image[i + 1, j + 1]
-        
-        # Verificar si el valor del píxel es el mayor de los vecinos
-        if suppressed_image[i, j] >= max(neighbor_1, neighbor_2):
-            # Si es el mayor, rastrear en esa dirección
-            for offset in [-1, 1]:
-                ni, nj = i, j
-                while 0 <= ni < img_height and 0 <= nj < img_width and suppressed_image[ni, nj] >= tlow and not visited[ni, nj]:
-                    visited[ni, nj] = True
-                    output_image[ni, nj] = 1.0
-                    ni += offset if angle in [0, 180] else 0
-                    nj += offset if angle in [90, 270] else 0
-        else:
-            output_image[i, j] = 0  # Si no es el mayor, suprimir el borde
+    gradient_direction = gradient_direction % 180  # Normalizar el angulo a [0,180)
 
-    # Buscar bordes fuertes y rastrear los débiles conectados
+    queue = deque()
     for i in range(1, img_height - 1):
         for j in range(1, img_width - 1):
-            if suppressed_image[i, j] > thigh and not visited[i, j]:
-                # Localizamos un borde fuerte
-                angle = gradient_direction[i, j]  # Obtener el ángulo del gradiente para (i, j)
-                trace_edge(i, j, angle)
-    
+            if suppressed_image[i, j] >= thigh: # Bordes fuertes
+                output_image[i, j] = 1.0
+                queue.append((i, j))
+
+    while queue: # Mientras haya pixeles que procesar
+        i, j = queue.popleft()
+        angle = gradient_direction[i, j]
+        neighbors = []
+        # Buscar 3 vecinos en la direccion perpendicular a la normal, la direccion del borde, por robustez
+        if (0 <= angle < 22.5) or (157.5 <= angle < 180):  # Arriba y abajo
+            for offset in range(1, neighbor_depth + 1):
+                neighbors.extend([(i - offset, j), (i + offset, j)])
+        elif 22.5 <= angle < 67.5:  # Diagonales superior derecha e inferior izquierda
+            for offset in range(1, neighbor_depth + 1):
+                neighbors.extend([(i - offset, j + offset), (i + offset, j - offset)])
+        elif 67.5 <= angle < 112.5:  # Izquierda y derecha
+            for offset in range(1, neighbor_depth + 1):
+                neighbors.extend([(i, j - offset), (i, j + offset)])
+        else:  # Diagonales superior izquierda e inferior derecha
+            for offset in range(1, neighbor_depth + 1):
+                neighbors.extend([(i + offset, j + offset), (i - offset, j - offset)])
+
+        for ni, nj in neighbors: #Buscar bordes suaves en los vecinos
+            if 0 <= ni < img_height and 0 <= nj < img_width:
+                if suppressed_image[ni, nj] >= tlow and output_image[ni, nj] == 0: # Si no se ha marcado ya, marcar como borde fuerte y procesar
+                    output_image[ni, nj] = 1.0
+                    queue.append((ni, nj))
+
     return output_image
 
-
-
-# ----------------------------------------- DETECTOR DE BORDES CANNY -----------------------------------------
 
 def edgeCanny(inImage, sigma, tlow, thigh):
     # Paso 1: Aplicar suavizado gaussiano
     smoothed_image = gaussianFilter(inImage, sigma)
-    cv2.imshow("Suavizado gaussiano", smoothed_image)
-    cv2.waitKey(0)
-
+    
     # Paso 2: Calcular el gradiente usando el operador Sobel
     gx, gy = gradientImage(smoothed_image, "Sobel")
     magnitude = np.sqrt(gx ** 2 + gy ** 2)
     gradient_direction = np.degrees(np.arctan2(gy, gx))  # Convertir a grados
-    cv2.imshow("Magnitud del gradiente con Sobel", magnitude)
-    cv2.waitKey(0)
-
+    
     # Paso 3: Supresión no máxima
     suppressed_image = nonMaximumSuppression(magnitude, gradient_direction)
-    cv2.imshow("Supresion no maxima", suppressed_image)
-    cv2.waitKey(0)
-
+    
     # Paso 4: Umbralización con histéresis
     final_image = hysteresis(suppressed_image, gradient_direction, tlow, thigh)
-    cv2.imshow("Histeresis", final_image)
-    cv2.waitKey(0)
-
-    cv2.destroyAllWindows()
+    
+    # Crear una nueva ventana de figura para cada imagen
+    plt.figure(figsize=(10, 8))
+    plt.suptitle("Resultados de Canny")
+    
+    # Mostrar suavizado gaussiano
+    plt.subplot(2, 2, 1)
+    plt.title("Suavizado Gaussiano")
+    plt.imshow(smoothed_image, cmap="gray")
+    plt.axis("off")
+    
+    # Mostrar magnitud del gradiente
+    plt.subplot(2, 2, 2)
+    plt.title("Magnitud del Gradiente")
+    plt.imshow(magnitude, cmap="gray")
+    plt.axis("off")
+    
+    # Mostrar supresión no máxima
+    plt.subplot(2, 2, 3)
+    plt.title("Supresión No Máxima")
+    plt.imshow(suppressed_image, cmap="gray")
+    plt.axis("off")
+    
+    # Mostrar histeresis
+    plt.subplot(2, 2, 4)
+    plt.title("Histeresis")
+    plt.imshow(final_image, cmap="gray")
+    plt.axis("off")
+    
+    # Ajustar para que los subplots no se solapen
+    plt.tight_layout()
+    plt.show()
 
     return final_image
