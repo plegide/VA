@@ -113,7 +113,7 @@ def gaussKernel1D(sigma):
     '''
 
     N = int(2 * np.ceil(3 * sigma) + 1)  # Calcular N a partir de sigma
-    x = np.linspace(-(N // 2), N // 2, N)  # Crear un vector de índice centrado
+    x = np.linspace(-(N // 2), N // 2, N)  # Crear de valores simétricos al rededor e de 0
     kernel = np.exp(-(x ** 2) / (2 * sigma ** 2))  # Calcular el kernel gaussiano
     kernel /= np.sum(kernel)  # Normalizar el kernel
 
