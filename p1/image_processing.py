@@ -23,9 +23,10 @@ def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
         imin, imax = np.min(inImage), np.max(inImage)
     else:
         imin, imax = inRange
+
     omin, omax = outRange
 
-    outImage = (inImage - imin) / (imax - imin) * (omax - omin) + omin 
+    outImage = omin + (inImage - imin) * (omax - omin) / (imax - imin)
     
     return outImage
 
