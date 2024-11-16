@@ -34,11 +34,11 @@ def save_processed_tuple(image, output_base_dir, filename, processing_function, 
 
 
 # Rutas de los directorios de entrada y salida
-# input_directory = "/home/plegide/Documents/FIC/4/VA/in_pruebas"
-# output_base_directory = "/home/plegide/Documents/FIC/4/VA/out_pruebas"
+# input_directory = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas"
+# output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/out_pruebas"
 
-input_directory = "/home/plegide/Documents/FIC/4/VA/small_sample"
-output_base_directory = "/home/plegide/Documents/FIC/4/VA/small_result"
+input_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_sample"
+output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_result"
 
 processing_functions = { # Diccionario de parametros para cada funcion
     #imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
@@ -110,10 +110,10 @@ for filename in os.listdir(input_directory):  # Todos los archivos en el directo
 print("FIN")
 
 
-#img = cv2.imread("/home/plegide/Documents/FIC/4/VA/in_pruebas/image2.png", cv2.IMREAD_GRAYSCALE)
+#img = cv2.imread("/home/plegide/Documents/FIC/4/VA/p1/in_pruebas/image2.png", cv2.IMREAD_GRAYSCALE)
 #imgCV = cv2.filter2D(img, -1, np.array(imProc.gaussKernel1D(0.8)))
 #imgCV = cv2.filter2D(imgCV, -1, np.array(imProc.gaussKernel1D(0.8)).T)
-#cv2.imwrite("/home/plegide/Documents/FIC/4/VA/out_pruebas/cv2.png", imgCV)
+#cv2.imwrite("/home/plegide/Documents/FIC/4/VA/p1/out_pruebas/cv2.png", imgCV)
 
 
 # def create_image_from_list(pixel_data, output_path):
@@ -130,7 +130,9 @@ print("FIN")
 #     # Guardar la imagen
 #     cv2.imwrite(output_path, pixel_array)
 
-# # Probar con SE cuadrado, circulo y cruz
+# Probar con SE cuadrado, circulo y cruz
+# Ejemplo dilate con 0s
+
 # pixel_data = [
 #     [1, 0, 0, 0],
 #     [1, 0, 0, 0],
@@ -138,10 +140,26 @@ print("FIN")
 #     [0, 1, 0, 0],
 #     [0, 1, 0, 0],
 # ]
-# output_path = "/home/plegide/Documents/FIC/4/VA/in_pruebas/morphGenerada.png"
+
+# Ejemplo fill diapositivas
+
+# pixel_data = [  [0, 0, 0, 1, 1, 0, 0, 0],
+#                 [0, 0, 0, 1, 0, 1, 0, 0],
+#                 [0, 0, 1, 0, 0, 1, 0, 0],
+#                 [0, 0, 1, 0, 0, 1, 0, 0],
+#                 [0, 1, 0, 0, 0, 1, 0, 0],
+#                 [0, 1, 0, 0, 0, 1, 0, 0],
+#                 [0, 0, 1, 0, 1, 0, 0, 0],
+#                 [0, 0, 0, 1, 0, 0, 0, 0]
+#             ]
+
+
+# output_path = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas/morphGenerada.png"
 # create_image_from_list(pixel_data, output_path)
 # image = read_and_process_image(output_path)
 # morphed_image = imProc.dilate(image, np.array([[1,0,1]]), [])
+# morphed_image = imProc.fill(image,[(4,3)],np.array([[0,1,0], [1,1,1], [0,1,0]]))
 # image_to_save = (morphed_image * 255).astype('uint8')
-# cv2.imwrite("/home/plegide/Documents/FIC/4/VA/out_pruebas/morfEroded.png", image_to_save)
+# cv2.imwrite("/home/plegide/Documents/FIC/4/VA/p1/out_pruebas/morfDilated.png", image_to_save)
+# cv2.imwrite("/home/plegide/Documents/FIC/4/VA/p1/out_pruebas/morfFilled.png", image_to_save)
 # print("FIN")

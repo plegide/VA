@@ -58,15 +58,15 @@ def filterImage(inImage, kernel):
     return outImage
 
 
+def plotGaussKernel(x, kernel, sigma):
+    """
+    Genera el gráfico de una campana de Gauss a partir de un kernel.
 
-def gaussKernel1D(sigma):
-
-    N = int(2 * np.ceil(3 * sigma) + 1)  # Calcular N a partir de sigma
-    x = np.linspace(-(N // 2), N // 2, N)  # Crear un vector de índice centrado
-    kernel = np.exp(-(x ** 2) / (2 * sigma ** 2))  # Calcular el kernel gaussiano
-    kernel /= np.sum(kernel)  # Normalizar el kernel
-
-    # Plotear la campana de gauss
+    Parameters:
+        x (np.ndarray): Vector de índices centrado.
+        kernel (np.ndarray): Kernel gaussiano 1D.
+        sigma (float): Desviación estándar de la distribución gaussiana.
+    """
     plt.figure(figsize=(8, 4))
     plt.plot(x, kernel, label=f'Sigma = {sigma}', color='blue')
     plt.title('Campana de Gauss')
@@ -78,6 +78,16 @@ def gaussKernel1D(sigma):
     plt.legend()
     plt.savefig(f'kernel_gaussiano.png')
     plt.close()
+
+def gaussKernel1D(sigma):
+
+    N = int(2 * np.ceil(3 * sigma) + 1)  # Calcular N a partir de sigma
+    x = np.linspace(-(N // 2), N // 2, N)  # Crear un vector de índice centrado
+    kernel = np.exp(-(x ** 2) / (2 * sigma ** 2))  # Calcular el kernel gaussiano
+    kernel /= np.sum(kernel)  # Normalizar el kernel
+
+    # Plotear la campana de gauss
+    plotGaussKernel(x, kernel, sigma)
 
     return kernel
 
@@ -166,49 +176,82 @@ def closing(inImage, SE, center=[]):
 
 
 def fill(inImage, seeds, SE=[], center=[]):
+    """
+    Rellena una región basada en el algoritmo descrito usando dilatación condicional.
+
+    Args:
+        inImage: Matriz binaria (0 y 1) que representa la imagen de entrada.
+        seeds: Matriz Nx2 con N coordenadas (fila, columna) de los puntos semilla.
+        SE: Matriz PxQ de 0s y 1s definiendo el elemento estructurante de conectividad.
+            Si es una lista vacía, se asume conectividad-4 (cruz 3x3).
+        center: Coordenadas (fila, columna) del centro del elemento estructurante.
+                Si es una lista vacía, se calcula automáticamente como el centro geométrico de SE.
+
+    Returns:
+        outImage: Imagen binaria con la región rellenada.
+    """
+
     img_height, img_width = inImage.shape
-    
-    # Usar conectividad 4 si no se proporciona un elemento estructurante
-    if isinstance(SE, list) and len(SE) == 0:  # Verificar si SE es una lista vacía
+
+    # Usar conectividad-4 si no se proporciona un elemento estructurante
+    if isinstance(SE, list) and len(SE) == 0:  # Si SE es una lista vacía
         SE = np.array([[0, 1, 0],
                        [1, 1, 1],
-                       [0, 1, 0]])
-    
-    se_height, se_width = SE.shape
-    print(se_height, se_width)
+                       [0, 1, 0]], dtype=bool)
 
-    # Calcular el centro del SE si no se proporciona
+    se_height, se_width = SE.shape
+
+    # Calcular el centro del elemento estructurante si no se proporciona
     if not center:
         center = (se_height // 2, se_width // 2)
-        print(center)
-    
-    center_x, center_y = center
-    print(center_x, center_y)
-    
-    # Inicializar `outImage` como una copia de `inImage`
-    outImage = inImage.copy()
-    
-    # Marcar los puntos semilla en `outImage`
-    for seed in seeds:
-        outImage[seed[0], seed[1]] = 1  # Marcar el punto semilla
 
-    # Realizar el llenado
-    changed = True
-    while changed:
-        changed = False
+    center_x, center_y = center
+
+    # Calcular manualmente el complemento de la imagen de entrada
+    A_complement = np.zeros_like(inImage, dtype=int)
+    for i in range(img_height):
+        for j in range(img_width):
+            A_complement[i, j] = 1 if inImage[i, j] == 0 else 0
+
+    # Crear una imagen binaria para el resultado
+    outImage = np.zeros_like(inImage, dtype=bool)
+
+    # Inicializar los puntos semilla en la imagen de salida
+    for seed in seeds:
+        outImage[seed[0], seed[1]] = 1
+
+    # Realizar el llenado de regiones
+    while True:
+        # Dilatación del conjunto actual (X_k-1) con el elemento estructurante
+        dilated = np.zeros_like(outImage, dtype=bool)
         for i in range(img_height):
             for j in range(img_width):
-                if outImage[i, j] == 1:  # Solo considerar píxeles marcados
-                    # Comprobar los vecinos según el SE, usando el centro
-                    for di in range(-center_x, se_height - center_x):
-                        for dj in range(-center_y, se_width - center_y):
-                            ni, nj = i + di, j + dj
-                            # Verificar que los vecinos estén dentro de los límites de la imagen
-                            if 0 <= ni < img_height and 0 <= nj < img_width:
-                                # Si el SE permite esa dirección y el vecino no está marcado
-                                if SE[di + center_x, dj + center_y] == 1 and outImage[ni, nj] == 0:
-                                    outImage[ni, nj] = 1  # Marcar el vecino en `outImage`
-                                    changed = True
+                if outImage[i, j]:  # Si el píxel pertenece a X_k-1
+                    # Aplicar el elemento estructurante
+                    for di, row in enumerate(SE):
+                        for dj, val in enumerate(row):
+                            if val:  # Considerar solo los puntos estructurantes no nulos
+                                ni, nj = i + di - center_x, j + dj - center_y
+                                if 0 <= ni < img_height and 0 <= nj < img_width:
+                                    dilated[ni, nj] = True
+
+        # Intersección con el complemento de la imagen de entrada
+        nextImage = np.zeros_like(dilated, dtype=int)
+        for i in range(img_height):
+            for j in range(img_width):
+                nextImage[i, j] = 1 if dilated[i, j] == 1 and A_complement[i, j] == 1 else 0
+
+        # Terminar si no hay cambios entre iteraciones
+        if np.array_equal(nextImage, outImage):
+            break
+
+        # Actualizar la imagen de salida
+        outImage = nextImage
+
+    # Unión final con la imagen original
+    for i in range(img_height):
+        for j in range(img_width):
+            outImage[i, j] = 1 if outImage[i, j] == 1 or inImage[i, j] == 1 else 0
 
     return outImage
 
@@ -246,9 +289,7 @@ def LoG(inImage, sigma):
     # Calcular tamaño del kernel
     N = int(2 * np.ceil(3 * sigma) + 1)  # Tamaño del kernel basado en sigma
     kernel = np.zeros((N, N))  # Inicializar el kernel de tamaño N x N
-    
-    # Constante de normalización NO VA
-    c = -1 / (np.pi * sigma**4)
+
     
     # Coordenadas del centro del kernel
     center = N // 2
@@ -350,10 +391,18 @@ def edgeCanny(inImage, sigma, tlow, thigh):
 
     suppressed_image = nonMaximumSuppression(magnitude, gradient_direction) # Supresión no máxima
     
-    final_image = hysteresis(suppressed_image, gradient_direction, tlow, thigh) # Histeresis
+    current_image = hysteresis(suppressed_image, gradient_direction, tlow, thigh)
+    next_hysteresis = hysteresis(current_image, gradient_direction, tlow, thigh)
+
+    while not np.array_equal(current_image, next_hysteresis):
+        current_image = next_hysteresis
+        next_hysteresis = hysteresis(current_image, gradient_direction, tlow, thigh)
+
+    final_image = current_image
+
     
     # Visualizar los pasos
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(12, 10))
     plt.suptitle("Resultados de Canny")
     plt.subplot(2, 2, 1)
     plt.title("Suavizado Gaussiano")
