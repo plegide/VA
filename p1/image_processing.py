@@ -23,9 +23,9 @@ def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
         imin, imax = np.min(inImage), np.max(inImage)
     else:
         imin, imax = inRange
-    omin, omax = outRange # Dividir el rango de salida en los valores mínimo y máximo
+    omin, omax = outRange
 
-    outImage = (inImage - imin) / (imax - imin) * (omax - omin) + omin # Aplicar la transformación lineal
+    outImage = (inImage - imin) / (imax - imin) * (omax - omin) + omin 
     
     return outImage
 

@@ -56,7 +56,7 @@ processing_functions = {
     #                               ]
     #},
 
-    #imProc.gaussianFilter: {"sigma": 0.8},
+    # imProc.gaussianFilter: {"sigma": 0.8},
 
     #imProc.medianFilter: {"filterSize": 7},
 
@@ -109,11 +109,11 @@ processing_functions = {
     #     "sigma": 1.0
     #},
 
-    #imProc.edgeCanny: {
+    # imProc.edgeCanny: {
     #     "sigma": 0.8,
     #     "tlow": 0.1,
     #     "thigh": 0.3
-    #}
+    # }
 }
 
 # Procesar todas las imágenes en el directorio de entrada
@@ -145,10 +145,10 @@ print("FIN")
 
 # Crear imagenes binarias para los filtros morfologicos PROBAR CON SE CUADRADO, CIRCULO Y CRUZ
 
-# def create_image_from_list(pixel_data, output_path):
-#
-#     pixel_array = np.array(pixel_data, dtype=np.uint8) * 255  # Multiplicamos por 255 para que 1 sea blanco (255) y 0 sea negro (0)
-#     cv2.imwrite(output_path, pixel_array)
+def create_image_from_list(pixel_data, output_path):
+
+    pixel_array = np.array(pixel_data, dtype=np.uint8) * 255  # Multiplicamos por 255 para que 1 sea blanco (255) y 0 sea negro (0)
+    cv2.imwrite(output_path, pixel_array)
 
 
 # Ejemplo dilate con 0s
@@ -173,9 +173,28 @@ print("FIN")
 #                 [0, 0, 0, 1, 0, 0, 0, 0]
 #             ]
 
+# pixel_data = [  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#             ]
+
 
 # Pruebas con los filtros
-# output_path = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas/morphGenerada.png"
+# output_path = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas/gaussPrueba2.png"
 # create_image_from_list(pixel_data, output_path)
 # image = read_and_process_image(output_path)
 
