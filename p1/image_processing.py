@@ -46,13 +46,13 @@ def equalizeIntensity(inImage, nBins=256):
     hist = np.zeros(nBins) # Calcular el histograma de la imagen
     for i in range(img_height): 
         for j in range(img_width):
-            pixel_value = int(inImage[i, j] * (nBins - 1))  # Normalizar el valor del pixel a [0, nBins - 1]
-            hist[pixel_value] += 1
+            pixel_value = int(inImage[i, j] * (nBins - 1))  # Escalar cada pixel a [0, nBins - 1], agrupandolos en nbins intervalos
+            hist[pixel_value] += 1 # Se aumenta el bin de ese valor de pixel
 
     cdf = hist.cumsum() # Función de distribución acumulada
-    cdf_normalized = cdf / cdf[-1] # Normalizar la CDF
-    outImage = np.interp(inImage.flatten(), np.linspace(0, 1, nBins), cdf_normalized) # Interpolar la CDF para obtener la imagen de salida
-    outImage = outImage.reshape(inImage.shape) # Reajustar las dimensiones de la imagen
+    cdf_normalized = cdf / cdf[-1] # Normalizar la CDF dividiendo por el valor máximo que es el ultimo
+    outImage = np.interp(inImage.flatten(), np.linspace(0, 1, nBins), cdf_normalized) # Se transforma la imagen de entrada a una dimension y se interpola con la CDF
+    outImage = outImage.reshape(inImage.shape) # Se devuelve la imagen plana a su forma original
 
     return outImage
 
