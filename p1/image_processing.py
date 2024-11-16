@@ -69,15 +69,15 @@ def filterImage(inImage, kernel):
             del filtro está en (⌊P/2⌋ + 1, ⌊Q/2⌋ + 1).
     '''
 
-    kernel = np.array(kernel)  # Convertir el kernel a un array de numpy
+    kernel = np.array(kernel)
     img_height, img_width = inImage.shape
     k_height, k_width = kernel.shape
-    pad_height = k_height // 2 # Calcular el padding
+    pad_height = k_height // 2 # Division entera para kernels de tamaño impar
     pad_width = k_width // 2
     outImage = np.zeros_like(inImage) 
-    padded_image = np.pad(inImage, ((pad_height, pad_height), (pad_width, pad_width)), mode='reflect') # Aplicar padding
+    padded_image = np.pad(inImage, ((pad_height, pad_height), (pad_width, pad_width)), mode='reflect')
 
-    for i in range(img_height): # Convolucion
+    for i in range(img_height): # Convolucion con el filtro
         for j in range(img_width):
             region = padded_image[i:i + k_height, j:j + k_width] # Extraer la región correspondiente de la imagen
             outImage[i, j] = np.sum(region * kernel) # Calcular la convolución y asignarla a la imagen de salida
