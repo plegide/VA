@@ -7,6 +7,17 @@ import matplotlib.pyplot as plt
 
 
 def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
+    '''
+    outImage = adjustIntensity (inImage, inRange=[], outRange=[0 1])
+    
+        inImage: Matriz MxN con la imagen de entrada.
+        outImage: Matriz MxN con la imagen de salida.
+        inRange: Vector 1x2 con el rango de niveles de intensidad [imin, imax] de entrada.
+            Si el vector está vacío (por defecto), el mínimo y máximo de la imagen de entrada
+            se usan como imin e imax.
+        outRange: Vector 1x2 con el rango de niveles de instensidad [omin, omax] de salida.
+            El valor por defecto es [0 1].
+    '''
 
     if len(inRange) == 0: # Si no se especifica el rango de entrada, se saca de la imagen
         imin, imax = np.min(inImage), np.max(inImage)
@@ -20,12 +31,20 @@ def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
 
 
 def equalizeIntensity(inImage, nBins=256):
+    '''
+    outImage = equalizeIntensity (inImage, nBins=256)
 
-    height, width = inImage.shape
+        inImage, outImage: ...
+        nBins: Número de bins utilizados en el procesamiento. Se asume que el intervalo de
+            entrada [0 1] se divide en nBins intervalos iguales para hacer el procesamiento,
+            y que la imagen de salida vuelve a quedar en el intervalo [0 1]. Por defecto 256.
+    '''
 
-    hist = np.zeros(nBins)
-    for i in range(height): # Calcular el histograma de la imagen
-        for j in range(width):
+    img_height, img_width = inImage.shape
+
+    hist = np.zeros(nBins) # Calcular el histograma de la imagen
+    for i in range(img_height): 
+        for j in range(img_width):
             pixel_value = int(inImage[i, j] * (nBins - 1))  # Normalizar el valor del pixel a [0, nBins - 1]
             hist[pixel_value] += 1
 
@@ -41,6 +60,13 @@ def equalizeIntensity(inImage, nBins=256):
 
 
 def filterImage(inImage, kernel):
+    '''
+    outImage = filterImage (inImage, kernel)
+
+        inImage, outImage: ...
+        kernel: Matriz PxQ con el kernel del filtro de entrada. Se asume que la posición central
+            del filtro está en (⌊P/2⌋ + 1, ⌊Q/2⌋ + 1).
+    '''
 
     kernel = np.array(kernel)  # Convertir el kernel a un array de numpy
     img_height, img_width = inImage.shape
@@ -59,14 +85,10 @@ def filterImage(inImage, kernel):
 
 
 def plotGaussKernel(x, kernel, sigma):
-    """
-    Genera el gráfico de una campana de Gauss a partir de un kernel.
+    '''
+    Genera el gráfico de la campana de Gauss a partir de un kernel.
+    '''
 
-    Parameters:
-        x (np.ndarray): Vector de índices centrado.
-        kernel (np.ndarray): Kernel gaussiano 1D.
-        sigma (float): Desviación estándar de la distribución gaussiana.
-    """
     plt.figure(figsize=(8, 4))
     plt.plot(x, kernel, label=f'Sigma = {sigma}', color='blue')
     plt.title('Campana de Gauss')
@@ -80,6 +102,14 @@ def plotGaussKernel(x, kernel, sigma):
     plt.close()
 
 def gaussKernel1D(sigma):
+    '''
+    kernel = gaussKernel1D (sigma)
+
+        sigma: Parámetro σ de entrada.
+        kernel: Vector 1xN con el kernel de salida, teniendo en cuenta que:
+            • El centro x = 0 de la Gaussiana está en la posición ⌊N/2⌋ + 1.
+            • N se calcula a partir de σ como N = 2⌈3σ⌉ + 1.
+    '''
 
     N = int(2 * np.ceil(3 * sigma) + 1)  # Calcular N a partir de sigma
     x = np.linspace(-(N // 2), N // 2, N)  # Crear un vector de índice centrado
@@ -91,7 +121,17 @@ def gaussKernel1D(sigma):
 
     return kernel
 
+
 def gaussianFilter(inImage, sigma):
+    '''
+    outImage = gaussianFilter (inImage, sigma)
+
+        inImage, outImage, sigma: ...
+
+        NOTA. Como el filtro Gaussiano es lineal y separable podemos implementar este suavi-
+        zado simplemente convolucionando la imagen, primero, con un kernel Gaussiano unidi-
+        mensional 1×N y, luego, convolucionando el resultado con el kernel transpuesto N×1.
+    '''
 
     kernel_1d = gaussKernel1D(sigma)
     temp_image = filterImage(inImage, kernel_1d.reshape(1, -1))  # Aplicar como filtro 1xN
@@ -99,7 +139,15 @@ def gaussianFilter(inImage, sigma):
 
     return outImage
 
+
 def medianFilter(inImage, filterSize):
+    '''
+    outImage = medianFilter (inImage, filterSize)
+    
+        inImage, outImage: ...
+        filterSice: Valor entero N indicando que el tamaño de ventana es de NxN. La posición
+            central de la ventana es (⌊N/2⌋ + 1, ⌊N/2⌋ + 1).
+    '''
 
     img_height, img_width = inImage.shape
     pad_size = filterSize // 2 # Calcular padding
@@ -118,6 +166,15 @@ def medianFilter(inImage, filterSize):
 
 
 def erode(inImage, SE, center=[]):
+    '''
+    outImage = erode (inImage, SE, center=[])
+
+        inImage, outImage: ...
+        SE: Matriz PxQ de zeros y unos definiendo el elemento estructurante.
+        center: Vector 1x2 con las coordenadas del centro de SE. Se asume que el [0 0] es
+            la esquina superior izquierda. Si es un vector vacío (valor por defecto), el centro
+            se calcula como (⌊P/2⌋ + 1, ⌊Q/2⌋ + 1)
+    '''
 
     img_height, img_width = inImage.shape
     se_height, se_width = SE.shape
@@ -143,6 +200,15 @@ def erode(inImage, SE, center=[]):
 
 
 def dilate(inImage, SE, center=[]):
+    '''
+    outImage = dilate (inImage, SE, center=[])
+
+        inImage, outImage: ...
+        SE: Matriz PxQ de zeros y unos definiendo el elemento estructurante.
+        center: Vector 1x2 con las coordenadas del centro de SE. Se asume que el [0 0] es
+            la esquina superior izquierda. Si es un vector vacío (valor por defecto), el centro
+            se calcula como (⌊P/2⌋ + 1, ⌊Q/2⌋ + 1)
+    '''
 
     img_height, img_width = inImage.shape
     se_height, se_width = SE.shape
@@ -166,92 +232,62 @@ def dilate(inImage, SE, center=[]):
 
 
 def opening(inImage, SE, center=[]):
+    '''
+    outImage = opening (inImage, SE, center=[])
+
+        inImage, outImage: ...
+        SE: Matriz PxQ de zeros y unos definiendo el elemento estructurante.
+        center: Vector 1x2 con las coordenadas del centro de SE. Se asume que el [0 0] es
+            la esquina superior izquierda. Si es un vector vacío (valor por defecto), el centro
+            se calcula como (⌊P/2⌋ + 1, ⌊Q/2⌋ + 1)
+    '''
 
     return dilate(erode(inImage, SE, center), SE, center) 
 
 
 def closing(inImage, SE, center=[]):
+    '''
+    outImage = closing (inImage, SE, center=[])
 
+        inImage, outImage: ...
+        SE: Matriz PxQ de zeros y unos definiendo el elemento estructurante.
+        center: Vector 1x2 con las coordenadas del centro de SE. Se asume que el [0 0] es
+            la esquina superior izquierda. Si es un vector vacío (valor por defecto), el centro
+            se calcula como (⌊P/2⌋ + 1, ⌊Q/2⌋ + 1)
+    '''
+    
     return erode(dilate(inImage, SE, center), SE, center)
 
 
 def fill(inImage, seeds, SE=[], center=[]):
     """
-    Rellena una región basada en el algoritmo descrito usando dilatación condicional.
+    outImage = fill (inImage, seeds, SE=[], center=[])
 
-    Args:
-        inImage: Matriz binaria (0 y 1) que representa la imagen de entrada.
-        seeds: Matriz Nx2 con N coordenadas (fila, columna) de los puntos semilla.
-        SE: Matriz PxQ de 0s y 1s definiendo el elemento estructurante de conectividad.
-            Si es una lista vacía, se asume conectividad-4 (cruz 3x3).
-        center: Coordenadas (fila, columna) del centro del elemento estructurante.
-                Si es una lista vacía, se calcula automáticamente como el centro geométrico de SE.
-
-    Returns:
-        outImage: Imagen binaria con la región rellenada.
+        inImage, outImage, center: ...
+        seeds: Matriz Nx2 con N coordenadas (fila,columna) de los puntos semilla.
+        SE: Matriz PxQ de zeros y unos definiendo el elemento estructurante de conectividad.
+            Si es un vector vacío se asume conectividad 4 (cruz 3 × 3).
     """
 
-    img_height, img_width = inImage.shape
-
-    # Usar conectividad-4 si no se proporciona un elemento estructurante
-    if isinstance(SE, list) and len(SE) == 0:  # Si SE es una lista vacía
+    # Si no se pasa un SE, 4-vecinos
+    if (isinstance(SE, list) and len(SE) == 0) or (isinstance(SE, np.ndarray) and SE.size == 0):
         SE = np.array([[0, 1, 0],
                        [1, 1, 1],
                        [0, 1, 0]], dtype=bool)
-
-    se_height, se_width = SE.shape
-
-    # Calcular el centro del elemento estructurante si no se proporciona
-    if not center:
-        center = (se_height // 2, se_width // 2)
-
-    center_x, center_y = center
-
-    # Calcular manualmente el complemento de la imagen de entrada
-    A_complement = np.zeros_like(inImage, dtype=int)
-    for i in range(img_height):
-        for j in range(img_width):
-            A_complement[i, j] = 1 if inImage[i, j] == 0 else 0
-
-    # Crear una imagen binaria para el resultado
-    outImage = np.zeros_like(inImage, dtype=bool)
-
-    # Inicializar los puntos semilla en la imagen de salida
+        
+    fill = np.zeros_like(inImage, dtype=bool)
+    complementary = np.logical_not(inImage) 
     for seed in seeds:
-        outImage[seed[0], seed[1]] = 1
+        fill[seed[0], seed[1]] = 1  #Poner los puntos semilla a 1
 
-    # Realizar el llenado de regiones
-    while True:
-        # Dilatación del conjunto actual (X_k-1) con el elemento estructurante
-        dilated = np.zeros_like(outImage, dtype=bool)
-        for i in range(img_height):
-            for j in range(img_width):
-                if outImage[i, j]:  # Si el píxel pertenece a X_k-1
-                    # Aplicar el elemento estructurante
-                    for di, row in enumerate(SE):
-                        for dj, val in enumerate(row):
-                            if val:  # Considerar solo los puntos estructurantes no nulos
-                                ni, nj = i + di - center_x, j + dj - center_y
-                                if 0 <= ni < img_height and 0 <= nj < img_width:
-                                    dilated[ni, nj] = True
-
-        # Intersección con el complemento de la imagen de entrada
-        nextImage = np.zeros_like(dilated, dtype=int)
-        for i in range(img_height):
-            for j in range(img_width):
-                nextImage[i, j] = 1 if dilated[i, j] == 1 and A_complement[i, j] == 1 else 0
-
-        # Terminar si no hay cambios entre iteraciones
-        if np.array_equal(nextImage, outImage):
+    while True: # Dilatacion condicional
+        previous = fill.copy()
+        dilated = dilate(previous, SE, center) # Aqui se cubre el caso del centro vacio
+        fill = np.logical_and(dilated, complementary) # Interseccion con el complementario
+        if np.array_equal(previous, fill): # Si no se generan nuevos 1s se para
             break
 
-        # Actualizar la imagen de salida
-        outImage = nextImage
-
-    # Unión final con la imagen original
-    for i in range(img_height):
-        for j in range(img_width):
-            outImage[i, j] = 1 if outImage[i, j] == 1 or inImage[i, j] == 1 else 0
+    outImage = np.logical_or(fill, inImage) # Union del relleno y la imagen original
 
     return outImage
 
@@ -260,58 +296,69 @@ def fill(inImage, seeds, SE=[], center=[]):
 
 
 def gradientImage(inImage, operator):
+    '''
+    [gx, gy] = gradientImage (inImage, operator)
+
+        inImage: ...
+        gx, gy: Componentes Gx y Gy del gradiente.
+        operator: Permite seleccionar el operador utilizado mediante los valores: ’Roberts’,
+            ’CentralDiff’, ’Prewitt’ o ’Sobel’.
+    '''
 
     if operator == 'Roberts':
         Gx = np.array([[1, 0], [0, -1]])
-        Gy = np.array([[0, 1], [-1, 0]])
+        Gy = Gx.T
 
     elif operator == 'CentralDiff':
         Gx = np.array([[-1, 0, 1]])
-        Gy = np.array([[-1], [0], [1]])
+        Gy = Gx.T
 
     elif operator == 'Prewitt':
         Gx = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
-        Gy = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]])
+        Gy = Gx.T
 
     elif operator == 'Sobel':
         Gx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
-        Gy = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
-
-    else:
-        raise ValueError("El kernel tiene que ser: 'Roberts', 'CentralDiff', 'Prewitt' o 'Sobel'")
+        Gy = Gx.T
 
     gx = filterImage(inImage, Gx)
     gy = filterImage(inImage, Gy)
+    
     return [gx, gy]
 
 
 def LoG(inImage, sigma):
-    # Calcular tamaño del kernel
-    N = int(2 * np.ceil(3 * sigma) + 1)  # Tamaño del kernel basado en sigma
-    kernel = np.zeros((N, N))  # Inicializar el kernel de tamaño N x N
+    '''
+    outImage = LoG (inImage, sigma)
 
-    
-    # Coordenadas del centro del kernel
+        inImage, outImage: ...
+        sigma: Parámetro σ de la Gaussiana.
+    '''
+
+    N = int(2 * np.ceil(3 * sigma) + 1)  # Tamaño del kernel en funcion de sigma
+    kernel = np.zeros((N, N))
     center = N // 2
 
-    # Llenar el kernel LoG
     for x in range(N):
         for y in range(N):
-            # Calcular x_rel y y_rel como distancia al centro del kernel
-            x_rel = x - center
+            x_rel = x - center 
             y_rel = y - center
-            
-            # Calcular valor del Laplaciano de Gaussiano
-            kernel[x, y] = ((x_rel**2 + y_rel**2 - sigma**2) / sigma**4) * np.exp(-(x_rel**2 + y_rel**2) / (2 * sigma**2))
+            kernel[x, y] = ((x_rel**2 + y_rel**2 - sigma**2) / sigma**4) * np.exp(-(x_rel**2 + y_rel**2) / (2 * sigma**2)) # Laplaciano de la Gaussiana
 
-    # Aplicar el filtro a la imagen de entrada usando convolución
-    kernel = kernel - np.mean(kernel)  # Restar la media del kernel
+    kernel = kernel - np.mean(kernel)  # Normalizar
     outImage = filterImage(inImage, kernel)
     
     return outImage
 
 
 def nonMaximumSuppression(magnitude, gradient_direction):
+    '''
+    suppressed_image = nonMaximumSuppression (magnitude, gradient_direction)
+
+        magnitude: Matriz MxN con la magnitud del gradiente.
+        gradient_direction: Matriz MxN con la dirección del gradiente.
+        suppressed_image: Matriz MxN con la imagen tras la supresión de no-máximos.
+    '''
 
     img_height, img_width = magnitude.shape
     suppressed_image = np.zeros((img_height, img_width), dtype=np.float32)
@@ -321,28 +368,37 @@ def nonMaximumSuppression(magnitude, gradient_direction):
         for j in range(1, img_width - 1):
             angle = gradient_direction[i, j]
             current_magnitude = magnitude[i, j]   
-            # Comparar cada pixel con el que esta en la direccion del gradiente
-            if (0 <= angle < 22.5) or (157.5 <= angle < 180): # 0 o 180 vecinos en los lados izquierdo y derecho
+            # Los vecinos son los pixeles en la direccion del gradiente
+            if (0 <= angle < 22.5) or (157.5 <= angle < 180): # vecinos en los lados izquierdo y derecho
                 neighbor_1 = magnitude[i, j - 1]
                 neighbor_2 = magnitude[i, j + 1]
-            elif 22.5 <= angle < 67.5: # 45 vecinos en las posiciones diagonal superior izquierda e inferior derecha
+            elif 22.5 <= angle < 67.5: # vecinos en las posiciones diagonal superior izquierda e inferior derecha
                 neighbor_1 = magnitude[i - 1, j - 1]
                 neighbor_2 = magnitude[i + 1, j + 1]
-                
-            elif 67.5 <= angle < 112.5: # 90 vecinos arriba y abajo
+            elif 67.5 <= angle < 112.5: # vecinos arriba y abajo
                 neighbor_1 = magnitude[i - 1, j]
                 neighbor_2 = magnitude[i + 1, j]
-            else:  # 112.5 <= angle < 157.5 135  vecinos en las posiciones diagonal superior derecha e inferior izquierda
+            else:  # 112.5 <= angle < 157.5 135 vecinos en las posiciones diagonal superior derecha e inferior izquierda
                 neighbor_1 = magnitude[i - 1, j + 1]
                 neighbor_2 = magnitude[i + 1, j - 1]
 
-            if current_magnitude >= neighbor_1 and current_magnitude >= neighbor_2: # Si no es maximo
+            if current_magnitude >= neighbor_1 and current_magnitude >= neighbor_2: # Si es el maximo entre los vecinos
                 suppressed_image[i, j] = current_magnitude
 
     return suppressed_image
 
 
 def hysteresis(suppressed_image, gradient_direction, tlow, thigh, neighbor_depth=3):
+    '''
+    output_image = hysteresis (suppressed_image, gradient_direction, tlow, thigh, neighbor_depth=3)
+
+        suppressed_image: Matriz MxN con la imagen tras la supresión de no-máximos.
+        gradient_direction: Matriz MxN con la dirección del gradiente.
+        tlow, thigh: Umbrales de histéresis bajo y alto, respectivamente.
+        neighbor_depth: Profundidad de los vecinos en la dirección del borde.
+        output_image: ...
+    '''
+
     output_image = np.zeros_like(suppressed_image)
     img_height, img_width = suppressed_image.shape
     gradient_direction = gradient_direction % 180  # Normalizar el angulo a [0,180)
@@ -354,7 +410,7 @@ def hysteresis(suppressed_image, gradient_direction, tlow, thigh, neighbor_depth
                 output_image[i, j] = 1.0
                 queue.append((i, j))
 
-    while queue: # Mientras haya pixeles que procesar
+    while queue: 
         i, j = queue.popleft()
         angle = gradient_direction[i, j]
         neighbors = []
@@ -382,6 +438,13 @@ def hysteresis(suppressed_image, gradient_direction, tlow, thigh, neighbor_depth
 
 
 def edgeCanny(inImage, sigma, tlow, thigh):
+    '''
+    outImage = edgeCanny (inImage, sigma, tlow, thigh)
+
+        inImage, outImage: ...
+        sigma: Parámetro σ del filtro Gaussiano.
+        tlow, thigh: Umbrales de histéresis bajo y alto, respectivamente.
+    '''
 
     smoothed_image = gaussianFilter(inImage, sigma) #Suavizado gaussiano
 
@@ -390,18 +453,10 @@ def edgeCanny(inImage, sigma, tlow, thigh):
     gradient_direction = np.degrees(np.arctan2(gy, gx))
 
     suppressed_image = nonMaximumSuppression(magnitude, gradient_direction) # Supresión no máxima
-    
-    current_image = hysteresis(suppressed_image, gradient_direction, tlow, thigh)
-    next_hysteresis = hysteresis(current_image, gradient_direction, tlow, thigh)
 
-    while not np.array_equal(current_image, next_hysteresis):
-        current_image = next_hysteresis
-        next_hysteresis = hysteresis(current_image, gradient_direction, tlow, thigh)
+    final_image = hysteresis(suppressed_image, gradient_direction, tlow, thigh)
 
-    final_image = current_image
-
-    
-    # Visualizar los pasos
+    # Plot de los pasos de Canny
     plt.figure(figsize=(12, 10))
     plt.suptitle("Resultados de Canny")
     plt.subplot(2, 2, 1)
