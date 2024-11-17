@@ -57,7 +57,7 @@ def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
 
     outImage = omin + (inImage - imin) * (omax - omin) / (imax - imin)
 
-    plot_comparison_histograms(inImage, outImage)
+    #plot_comparison_histograms(inImage, outImage)
     
     return outImage
 
@@ -188,13 +188,13 @@ def medianFilter(inImage, filterSize):
     '''
 
     img_height, img_width = inImage.shape
-    pad_size = filterSize // 2 # Calcular padding
+    pad_size = filterSize // 2
     outImage = np.zeros_like(inImage)
     padded_image = np.pad(inImage, ((pad_size, pad_size), (pad_size, pad_size)), mode='reflect')
 
     for i in range(img_height): # Calcular la mediana
         for j in range(img_width):
-            region = padded_image[i:i + filterSize, j:j + filterSize] # Extraer la región de la imagen
+            region = padded_image[i:i + filterSize, j:j + filterSize] # Extraer la region del tamaño del filtro
             outImage[i, j] = np.median(region) # Calcular la mediana de la region y asignarla a la imagen de salida
     
     return outImage

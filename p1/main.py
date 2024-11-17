@@ -35,12 +35,12 @@ def save_processed_tuple(image, output_base_dir, filename, processing_function, 
 
 
 # Directorios con las imagenes de entrada y salida
-# input_directory = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas"
-# output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/out_pruebas"
+input_directory = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas"
+output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/out_pruebas"
 
 # Directorios para poner una imagen concreta a probar
-input_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_sample"
-output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_result"
+# input_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_sample"
+# output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_result"
 
 
 # Diccionario con las funciones de procesamiento y sus parámetros
@@ -48,19 +48,19 @@ processing_functions = {
 
     # imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
 
-    imProc.equalizeIntensity: {"nBins": 128},
+    # imProc.equalizeIntensity: {"nBins": 128},
 
-    #imProc.filterImage: {"kernel": [   [1/9, 1/9, 1/9],
+    # imProc.filterImage: {"kernel": [   [1/9, 1/9, 1/9],
     #                                   [1/9, 1/9, 1/9],
     #                                   [1/9, 1/9, 1/9]
     #                               ]
-    #},
+    # },
 
     # imProc.gaussianFilter: {"sigma": 0.8},
 
-    #imProc.medianFilter: {"filterSize": 7},
+    # imProc.medianFilter: {"filterSize": 7},
 
-    #imProc.erode: {
+    # imProc.erode: {
     #      "SE": np.array([ [0, 0, 1, 0, 0],
     #                       [0, 1, 1, 1, 0],
     #                       [1, 1, 1, 1, 1],
@@ -68,49 +68,46 @@ processing_functions = {
     #                       [0, 0, 1, 0, 0]
     #                     ]),
     #      "center": []
-    #},
+    # },
 
-    #imProc.dilate: {
+    # imProc.dilate: {
     #      "SE": np.array([ [0, 0, 0],
     #                       [1, 1, 1],
     #                       [0, 0, 0]
     #                     ]),
     #      "center": []
-    #},
+    # },
 
-    #imProc.opening: {
+    # imProc.opening: {
     #     "SE": np.array([  [1, 1, 1],
     #                       [1, 1, 1],
     #                       [1, 1, 1]
     #                   ]),
     #     "center": []  # Calcula el centro automáticamente
-    #},
+    # },
 
-    #imProc.closing: {
+    # imProc.closing: {
     #     "SE": np.array([  [1, 1, 1],
     #                       [1, 1, 1],
     #                       [1, 1, 1]
     #                  ]),
     #     "center": []  # Calcula el centro automáticamente
-    #},
+    # },
 
-    #imProc.fill: {
-    #     "seeds": np.array([[7,3]]),
-    #     "SE": np.array([  [1, 1, 1]
-    #                  ]),
-    #     "center": []
-    #},
+    # imProc.fill: {
+    #     "seeds": [(4,3)]
+    # },
 
-    #imProc.gradientImage: {
+    # imProc.gradientImage: {
     #      "operator": "Sobel"  # Puede ser Sobel, Roberts CentralDiff o Prewitt
-    #},
+    # },
 
-    #imProc.LoG: {
+    # imProc.LoG: {
     #     "sigma": 1.0
-    #},
+    # },
 
     # imProc.edgeCanny: {
-    #     "sigma": 0.8,
+    #     "sigma": 2,
     #     "tlow": 0.1,
     #     "thigh": 0.3
     # }
