@@ -6,6 +6,35 @@ import matplotlib.pyplot as plt
 # ----------------------------------------- HISTOGRAMAS: MEJORA DE CONTRASTE -----------------------------------------
 
 
+def plot_comparison_histograms(original_image, equalized_image, nBins=256):
+    '''
+    Plotea los histogramas de la imagen original y la procesada en subplots separados.
+    '''
+    
+    plt.figure(figsize=(12, 6))
+    plt.suptitle("Histogramas de las Imágenes")
+    
+    # Histograma de la imagen original
+    plt.subplot(1, 2, 1)
+    plt.hist(original_image.flatten(), bins=nBins, color='blue', alpha=0.7)
+    plt.title("Histograma Original")
+    plt.xlabel("Intensidad")
+    plt.ylabel("Frecuencia")
+    plt.grid(alpha=0.3)
+    
+    # Histograma de la imagen ecualizada
+    plt.subplot(1, 2, 2)
+    plt.hist(equalized_image.flatten(), bins=nBins, color='green', alpha=0.7)
+    plt.title("Histograma Procesado")
+    plt.xlabel("Intensidad")
+    plt.ylabel("Frecuencia")
+    plt.grid(alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
+
+
+
 def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
     '''
     outImage = adjustIntensity (inImage, inRange=[], outRange=[0 1])
@@ -27,6 +56,8 @@ def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
     omin, omax = outRange
 
     outImage = omin + (inImage - imin) * (omax - omin) / (imax - imin)
+
+    plot_comparison_histograms(inImage, outImage)
     
     return outImage
 
@@ -41,18 +72,24 @@ def equalizeIntensity(inImage, nBins=256):
             y que la imagen de salida vuelve a quedar en el intervalo [0 1]. Por defecto 256.
     '''
 
-    img_height, img_width = inImage.shape
+    M, N = inImage.shape
+    H = np.zeros(nBins) # Histograma de la imagen
+    for i in range(M):
+        for j in range(N):
+            pixel_value = int(inImage[i, j] * (nBins - 1))  # Mapear de [0, 1] a [0, nBins - 1]
+            H[pixel_value] += 1  # Se aumenta el bin del histograma para ese valor de pixel
 
-    hist = np.zeros(nBins) # Calcular el histograma de la imagen
-    for i in range(img_height): 
-        for j in range(img_width):
-            pixel_value = int(inImage[i, j] * (nBins - 1))  # Escalar cada pixel a [0, nBins - 1], agrupandolos en nbins intervalos
-            hist[pixel_value] += 1 # Se aumenta el bin de ese valor de pixel
+    Hc = H.cumsum() # Histograma acumulado
+    T = (Hc / (M*N)) * 255 # Funcion de transformacion
 
-    cdf = hist.cumsum() # Función de distribución acumulada
-    cdf_normalized = cdf / cdf[-1] # Normalizar la CDF dividiendo por el valor máximo que es el ultimo
-    outImage = np.interp(inImage.flatten(), np.linspace(0, 1, nBins), cdf_normalized) # Se transforma la imagen de entrada a una dimension y se interpola con la CDF
-    outImage = outImage.reshape(inImage.shape) # Se devuelve la imagen plana a su forma original
+    # Mapear cada píxel de la imagen original a partir de T
+    outImage = np.zeros_like(inImage)
+    for i in range(M):
+        for j in range(N):
+            pixel_value = int(inImage[i, j] * (nBins - 1))
+            outImage[i, j] = T[pixel_value] / 255.0  # Normalizar de nuevo a [0, 1]
+    
+    plot_comparison_histograms(inImage, outImage)
 
     return outImage
 

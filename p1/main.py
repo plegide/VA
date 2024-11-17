@@ -46,9 +46,9 @@ output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_result"
 # Diccionario con las funciones de procesamiento y sus parámetros
 processing_functions = {
 
-    imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
+    # imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
 
-    #imProc.equalizeIntensity: {"nBins": 128},
+    imProc.equalizeIntensity: {"nBins": 128},
 
     #imProc.filterImage: {"kernel": [   [1/9, 1/9, 1/9],
     #                                   [1/9, 1/9, 1/9],
