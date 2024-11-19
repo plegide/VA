@@ -57,7 +57,7 @@ def adjustIntensity(inImage, inRange=[], outRange=[0, 1]):
 
     outImage = omin + (inImage - imin) * (omax - omin) / (imax - imin)
 
-    #plot_comparison_histograms(inImage, outImage)
+    plot_comparison_histograms(inImage, outImage)
     
     return outImage
 

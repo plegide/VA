@@ -35,20 +35,20 @@ def save_processed_tuple(image, output_base_dir, filename, processing_function, 
 
 
 # Directorios con las imagenes de entrada y salida
-input_directory = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas"
-output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/out_pruebas"
+# input_directory = "/home/plegide/Documents/FIC/4/VA/p1/in_pruebas"
+# output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/out_pruebas"
 
 # Directorios para poner una imagen concreta a probar
-# input_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_sample"
-# output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_result"
+input_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_sample"
+output_base_directory = "/home/plegide/Documents/FIC/4/VA/p1/small_result"
 
 
 # Diccionario con las funciones de procesamiento y sus parámetros
 processing_functions = {
 
-    # imProc.adjustIntensity: {"inRange": [], "outRange": [0.2, 0.8]},
+    # imProc.adjustIntensity: {},
 
-    # imProc.equalizeIntensity: {"nBins": 128},
+    # imProc.equalizeIntensity: {},
 
     # imProc.filterImage: {"kernel": [   [1/9, 1/9, 1/9],
     #                                   [1/9, 1/9, 1/9],
@@ -95,7 +95,7 @@ processing_functions = {
     # },
 
     # imProc.fill: {
-    #     "seeds": [(4,3)]
+    #     "seeds": [(25,25)]
     # },
 
     # imProc.gradientImage: {
@@ -103,13 +103,13 @@ processing_functions = {
     # },
 
     # imProc.LoG: {
-    #     "sigma": 1.0
+    #     "sigma": 2.5
     # },
 
     # imProc.edgeCanny: {
-    #     "sigma": 2,
-    #     "tlow": 0.1,
-    #     "thigh": 0.3
+    #     "sigma": 3,
+    #     "tlow": 0.05,
+    #     "thigh": 0.2
     # }
 }
 
