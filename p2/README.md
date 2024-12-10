@@ -24,3 +24,5 @@
 - El sistema puede ser malo identificando y buenisimo diagnosticando, dependiendo del bias.
 
 - El problem a es la copa pq tiene el nervio optico en medio. Se hace asumiendo una forma en la segmentacion. Una elipse o un ovalo.
+
+- Metricas de segmentacion IoU (interseccion sobre la union) y Factor dice.
