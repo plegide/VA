@@ -21,21 +21,30 @@ def load_images(image_folder):
             images.append((filename, image))
     return images
 
+
 def load_ground_truth(gt_folder):
     """
-    Loads ground truth images from a folder.
+    Loads ground truth images for optic disc and cup from a folder.
 
     Args:
         gt_folder (str): Path to the folder containing the ground truth images.
 
     Returns:
-        list: List of tuples (filename, ground_truth) where ground_truth is a NumPy array.
+        dict: A dictionary with keys 'disc' and 'cup', each containing a dictionary
+              of filenames and corresponding ground truth images as NumPy arrays.
     """
-    ground_truths = []
+    ground_truths = {'disc': {}, 'cup': {}}
     filenames = sorted(os.listdir(gt_folder))
+    
     for filename in filenames:
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
             gt_path = os.path.join(gt_folder, filename)
-            gt_image = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE) # Read as grayscale
-            ground_truths.append((filename, gt_image))
+            gt_image = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE)  # Read as grayscale
+            
+            # Categorize the image as 'disc' or 'cup' based on its filename
+            if 'disc' in filename.lower():
+                ground_truths['disc'][filename] = gt_image
+            elif 'cup' in filename.lower():
+                ground_truths['cup'][filename] = gt_image
+    
     return ground_truths
