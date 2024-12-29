@@ -22,7 +22,8 @@ def get_roi(inImage, window_size):
     """
 
     # Extract the green channel and smooth the image
-    green_channel = inImage[:, :, 1]
+    inImageCopy = inImage.copy()
+    green_channel = inImageCopy[:, :, 1]
     smoothed_channel = cv2.GaussianBlur(green_channel, (5, 5), 0)
 
     # Find the brightest point (initial approximation for ROI center)
@@ -91,7 +92,10 @@ def extract_roi(image, roi_relative_coords):
     x_start, y_start, width, height = roi_relative_coords
     x_end = x_start + width
     y_end = y_start + height
-    return image[y_start:y_end, x_start:x_end]
+
+    roi = image[y_start:y_end, x_start:x_end]
+
+    return roi
 
 
 
@@ -106,32 +110,22 @@ def remove_vessels_disc(image, threshold_low, openSESize):
         numpy.ndarray: Binary edge mask without blood vessels.
     """
     # Extract the red channel to focus on the disc
-    red_channel = image[:, :, 2]  # Use the red channel
+    red_channel = image[:, :, 2]  # Use the red channel in openCV BGR
 
-    # # Apply CLAHE to enhance contrast in the red channel
-    # clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
-    # clahe_image = clahe.apply(red_channel)
+    # Apply morphological closing for vessels and white regions
+    structuring_element = disk(20)
+    closed_image = closing(red_channel, structuring_element).astype(np.uint8)
 
-    # Apply histogram equalization to enhance contrast in the red channel
-    equalized_image = cv2.equalizeHist(red_channel)
-
-    # Apply a threshold to keep only brighter regions
-    _, thresholded = cv2.threshold(equalized_image, threshold_low, 255, cv2.THRESH_TOZERO)
-    
-    
-    # Morphological opening to remove small gray spots
-    structuring_element = disk(openSESize)  # Disk size depends on vessel size
-    opened_image = opening(thresholded, structuring_element).astype(np.uint8)
-
-    # structuring_element = disk(closeSESize)  # Disk size depends on vessel size
-    # closed_image = closing(opened_image, structuring_element).astype(np.uint8)
+    # Apply CLAHE to the closed image
+    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(5, 5))
+    clahe_image = clahe.apply(closed_image)
 
     # Detect edges using Canny
-    edges = canny(opened_image, sigma=6.0) 
+    edges = canny(clahe_image, sigma=1.8) 
     edges = (edges * 255).astype(np.uint8)
-
+    
     # Plot the results for visualization
-    fig, axes = plt.subplots(1, 6, figsize=(20, 5))
+    fig, axes = plt.subplots(1, 5, figsize=(20, 5))
     axes[0].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     axes[0].set_title('Original Image')
     axes[0].axis('off')
@@ -140,25 +134,17 @@ def remove_vessels_disc(image, threshold_low, openSESize):
     axes[1].set_title('Red Channel')
     axes[1].axis('off')
 
-    # axes[2].imshow(clahe_image, cmap='gray')
-    # axes[2].set_title('CLAHE Image')
-    # axes[2].axis('off')
-
-    axes[2].imshow(equalized_image, cmap='gray')
-    axes[2].set_title('Equalized Image')
+    axes[2].imshow(closed_image, cmap='gray')
+    axes[2].set_title('Closed Image')
     axes[2].axis('off')
 
-    axes[3].imshow(thresholded, cmap='gray')
-    axes[3].set_title('Thresholded Image')
+    axes[3].imshow(clahe_image, cmap='gray')
+    axes[3].set_title('CLAHE Image')
     axes[3].axis('off')
-    
-    axes[4].imshow(opened_image, cmap='gray')
-    axes[4].set_title('Opened Image')
-    axes[4].axis('off')
 
-    axes[5].imshow(edges, cmap='gray')
-    axes[5].set_title('Edges')
-    axes[5].axis('off')
+    axes[4].imshow(edges, cmap='gray')
+    axes[4].set_title('Edges')
+    axes[4].axis('off')
 
     plt.show()
 
@@ -198,32 +184,32 @@ def remove_vessels_cup(image, disc_mask, threshold_low, threshold_lower, openSES
 
 
     # Visualización de resultados
-    fig, axes = plt.subplots(1, 6, figsize=(25, 5))
-    axes[0].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    axes[0].set_title('Imagen Original')
-    axes[0].axis('off')
+    # fig, axes = plt.subplots(1, 6, figsize=(25, 5))
+    # axes[0].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    # axes[0].set_title('Imagen Original')
+    # axes[0].axis('off')
 
-    axes[1].imshow(green_channel, cmap='gray')
-    axes[1].set_title('Canal Verde')
-    axes[1].axis('off')
+    # axes[1].imshow(green_channel, cmap='gray')
+    # axes[1].set_title('Canal Verde')
+    # axes[1].axis('off')
 
-    axes[2].imshow(clahe_image, cmap='gray')
-    axes[2].set_title('CLAHE aplicado')
-    axes[2].axis('off')
+    # axes[2].imshow(clahe_image, cmap='gray')
+    # axes[2].set_title('CLAHE aplicado')
+    # axes[2].axis('off')
 
-    axes[3].imshow(thresholded_cup, cmap='gray')
-    axes[3].set_title('Umbral para la Copa')
-    axes[3].axis('off')
+    # axes[3].imshow(thresholded_cup, cmap='gray')
+    # axes[3].set_title('Umbral para la Copa')
+    # axes[3].axis('off')
 
-    axes[4].imshow(opened_image, cmap='gray')
-    axes[4].set_title('Open')
-    axes[4].axis('off')
+    # axes[4].imshow(opened_image, cmap='gray')
+    # axes[4].set_title('Open')
+    # axes[4].axis('off')
 
-    axes[5].imshow(closed_image, cmap='gray')
-    axes[5].set_title('Closed')
-    axes[5].axis('off')
+    # axes[5].imshow(closed_image, cmap='gray')
+    # axes[5].set_title('Closed')
+    # axes[5].axis('off')
 
-    plt.show()
+    # plt.show()
 
     return opened_image
 
@@ -250,10 +236,6 @@ def segment_disc(original_image, roi_relative_coords, edges, image_name):
 
     # Evolución de la snake con Morphological Chan-Vese
     snake = morphological_chan_vese(edges, num_iter=66, init_level_set=init, smoothing=1)
-
-    # Refinamiento del resultado con cierre morfológico
-    # SE = disk(8)
-    # snake = opening(snake, SE)
 
     # Encontrar contornos en la snake
     contours, _ = cv2.findContours(snake.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -317,18 +299,6 @@ def segment_cup(original_image, roi_relative_coords, edges, image_name):
     Returns:
         numpy.ndarray: Binary mask of the optic cup mapped to the original image.
     """
-    # # Inicializar nivel de contorno circular
-    # init = np.zeros_like(edges)
-    # cx, cy = edges.shape[1] // 2, edges.shape[0] // 2
-    # r = min(cx, cy) - 15
-    # cv2.circle(init, (cx, cy), r, 1, -1)
-
-    # # Aplicar Morphological Chan-Vese
-    # snake = morphological_chan_vese(edges, num_iter=66, init_level_set=init, smoothing=1)
-
-    # # Refinar con cierre morfológico
-    # selem = disk(20)
-    # snake_refined = closing(snake, selem)
 
     # Encontrar contornos y ajustar elipse
     contours, _ = cv2.findContours(edges.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -351,27 +321,24 @@ def segment_cup(original_image, roi_relative_coords, edges, image_name):
     cv2.ellipse(result_full, ellipse_mapped, (0, 255, 0), 2)
 
     # Visualización
-    fig, axes = plt.subplots(1, 5, figsize=(25, 5))
-    # axes[0].imshow(snake_refined, cmap='gray')
-    # axes[0].set_title('Snake refinado')
+    # fig, axes = plt.subplots(1, 4, figsize=(25, 5))
+
+    # axes[0].imshow(mask_roi, cmap='gray')
+    # axes[0].set_title('Máscara en ROI')
     # axes[0].axis('off')
 
-    axes[1].imshow(mask_roi, cmap='gray')
-    axes[1].set_title('Máscara en ROI')
-    axes[1].axis('off')
+    # axes[1].imshow(mask_full, cmap='gray')
+    # axes[1].set_title('Máscara en imagen completa')
+    # axes[1].axis('off')
 
-    axes[2].imshow(mask_full, cmap='gray')
-    axes[2].set_title('Máscara en imagen completa')
-    axes[2].axis('off')
+    # axes[2].imshow(cv2.cvtColor(result_full, cv2.COLOR_BGR2RGB))
+    # axes[2].set_title('Copa en imagen completa')
+    # axes[2].axis('off')
 
-    axes[3].imshow(cv2.cvtColor(result_full, cv2.COLOR_BGR2RGB))
-    axes[3].set_title('Copa en imagen completa')
-    axes[3].axis('off')
-
-    axes[4].imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
-    axes[4].imshow(mask_full, alpha=0.5, cmap='gray')
-    axes[4].set_title('Máscara superpuesta')
-    axes[4].axis('off')
+    # axes[3].imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
+    # axes[3].imshow(mask_full, alpha=0.5, cmap='gray')
+    # axes[3].set_title('Máscara superpuesta')
+    # axes[3].axis('off')
 
     plt.show()
 
