@@ -1,5 +1,5 @@
 from data import load_images, load_ground_truth
-from roi import get_roi, get_roi_from_disc, extract_roi, segment_disc, segment_cup, remove_vessels_disc, remove_vessels_cup
+from roi import get_roi, get_roi_from_disc, extract_roi, segment_disc, segment_cup, remove_vessels_disc, remove_vessels_cup, compute_cdr
 from metrics import compute_iou, compute_dice
 import cv2
 import os
@@ -31,7 +31,7 @@ def main():
 
         roi_cup = extract_roi(image, small_roi_coordinates)
 
-        vessels_removed_cup = remove_vessels_cup(roi_cup, roi_disc_mask, 180, 185, 2) # 160 200
+        vessels_removed_cup = remove_vessels_cup(roi_cup, roi_disc_mask, 160, 5) # 185, 2
 
         cup_mask = segment_cup(image, small_roi_coordinates, vessels_removed_cup, f"Cup_{idx}")
 
@@ -61,6 +61,13 @@ def main():
             print(f"  Cup - IoU: {iou_cup:.4f}, Dice: {dice_cup:.4f}")
         else:
             print(f"  No ground truth found for cup")
+
+        cdr = compute_cdr(disc_mask, cup_mask)
+        print(f"Image CDR: {cdr:.4f}")
+        
+        gt_cdr = compute_cdr(gt_disc, gt_cup)
+        print(f"Ground Truth CDR: {gt_cdr:.4f}")
+
 
         # Visualización
         fig, axes = plt.subplots(1, 7, figsize=(16, 8))

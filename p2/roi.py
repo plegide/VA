@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.morphology import closing, disk, opening
+from skimage.morphology import closing, disk
 from skimage.feature import canny
 from skimage.segmentation import morphological_chan_vese
 
@@ -151,7 +151,8 @@ def remove_vessels_disc(image, threshold_low, openSESize):
     return edges
 
 
-def remove_vessels_cup(image, disc_mask, threshold_low, threshold_lower, openSESize):
+
+def remove_vessels_cup(image, disc_mask, threshold_lower, openSESize):
     """
     Removes blood vessels from the optic disc and highlights the cup for segmentation.
 
@@ -168,50 +169,44 @@ def remove_vessels_cup(image, disc_mask, threshold_low, threshold_lower, openSES
     # 1. Extraer el canal verde
     green_channel = masked_image[:, :, 1] if image.ndim == 3 else image
 
+     # Morphological opening to remove small gray spots
+    structuring_element = disk(openSESize)  # Disk size depends on vessel size
+    opened_image = closing(green_channel, structuring_element).astype(np.uint8)
+
     # 4. Aplicar CLAHE a las zonas claras
-    clahe = cv2.createCLAHE(clipLimit=8.0, tileGridSize=(8, 8))
-    clahe_image = clahe.apply(green_channel)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(10, 10))
+    clahe_image = clahe.apply(opened_image)
 
     # 5. Umbralización para resaltar la copa
-    _, thresholded_cup = cv2.threshold(clahe_image, threshold_lower, 255, cv2.THRESH_BINARY)
+    _, thresholded_cup = cv2.threshold(opened_image, threshold_lower, 255, cv2.THRESH_BINARY)
 
-    # Morphological opening to remove small gray spots
-    structuring_element = disk(openSESize)  # Disk size depends on vessel size
-    opened_image = opening(thresholded_cup, structuring_element).astype(np.uint8)
-
-    structuring_element = disk(openSESize)  # Disk size depends on vessel size
-    closed_image = closing(opened_image, structuring_element).astype(np.uint8)
 
 
     # Visualización de resultados
-    # fig, axes = plt.subplots(1, 6, figsize=(25, 5))
-    # axes[0].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    # axes[0].set_title('Imagen Original')
-    # axes[0].axis('off')
+    fig, axes = plt.subplots(1, 5, figsize=(25, 5))
+    axes[0].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    axes[0].set_title('Imagen Original')
+    axes[0].axis('off')
 
-    # axes[1].imshow(green_channel, cmap='gray')
-    # axes[1].set_title('Canal Verde')
-    # axes[1].axis('off')
+    axes[1].imshow(green_channel, cmap='gray')
+    axes[1].set_title('Canal Verde')
+    axes[1].axis('off')
 
-    # axes[2].imshow(clahe_image, cmap='gray')
-    # axes[2].set_title('CLAHE aplicado')
-    # axes[2].axis('off')
+    axes[2].imshow(clahe_image, cmap='gray')
+    axes[2].set_title('CLAHE aplicado')
+    axes[2].axis('off')
 
-    # axes[3].imshow(thresholded_cup, cmap='gray')
-    # axes[3].set_title('Umbral para la Copa')
-    # axes[3].axis('off')
+    axes[3].imshow(thresholded_cup, cmap='gray')
+    axes[3].set_title('Umbral para la Copa')
+    axes[3].axis('off')
 
-    # axes[4].imshow(opened_image, cmap='gray')
-    # axes[4].set_title('Open')
-    # axes[4].axis('off')
+    axes[4].imshow(opened_image, cmap='gray')
+    axes[4].set_title('Open')
+    axes[4].axis('off')
 
-    # axes[5].imshow(closed_image, cmap='gray')
-    # axes[5].set_title('Closed')
-    # axes[5].axis('off')
+    plt.show()
 
-    # plt.show()
-
-    return opened_image
+    return thresholded_cup
 
 
 def segment_disc(original_image, roi_relative_coords, edges, image_name):
@@ -254,31 +249,31 @@ def segment_disc(original_image, roi_relative_coords, edges, image_name):
     mask_full[y_start:y_start + height, x_start:x_start + width] = mask_roi
 
     # Visualización de pasos intermedios usando matplotlib
-    fig, axes = plt.subplots(1, 5, figsize=(25, 5))
-    fig.suptitle(image_name, fontsize=16)
+    # fig, axes = plt.subplots(1, 5, figsize=(25, 5))
+    # fig.suptitle(image_name, fontsize=16)
 
-    axes[0].imshow(snake, cmap='gray')
-    axes[0].set_title('Snake aplicado')
-    axes[0].axis('off')
+    # axes[0].imshow(snake, cmap='gray')
+    # axes[0].set_title('Snake aplicado')
+    # axes[0].axis('off')
 
-    axes[1].imshow(mask_roi, cmap='gray')
-    axes[1].set_title('Máscara en ROI')
-    axes[1].axis('off')
+    # axes[1].imshow(mask_roi, cmap='gray')
+    # axes[1].set_title('Máscara en ROI')
+    # axes[1].axis('off')
 
-    axes[2].imshow(mask_full, cmap='gray')
-    axes[2].set_title('Máscara en Imagen Completa')
-    axes[2].axis('off')
+    # axes[2].imshow(mask_full, cmap='gray')
+    # axes[2].set_title('Máscara en Imagen Completa')
+    # axes[2].axis('off')
 
-    axes[3].imshow(original_image)
-    axes[3].set_title('Imagen Original')
-    axes[3].axis('off')
+    # axes[3].imshow(original_image)
+    # axes[3].set_title('Imagen Original')
+    # axes[3].axis('off')
 
-    axes[4].imshow(mask_full, alpha=0.5, cmap='gray')
-    axes[4].imshow(original_image, alpha=0.5)
-    axes[4].set_title('Máscara Superpuesta')
-    axes[4].axis('off')
+    # axes[4].imshow(mask_full, alpha=0.5, cmap='gray')
+    # axes[4].imshow(original_image, alpha=0.5)
+    # axes[4].set_title('Máscara Superpuesta')
+    # axes[4].axis('off')
 
-    plt.show()
+    # plt.show()
 
     return mask_full
 
@@ -306,9 +301,13 @@ def segment_cup(original_image, roi_relative_coords, edges, image_name):
     all_contours = np.vstack(contours)
     ellipse = cv2.fitEllipse(all_contours)
 
+    # Ensanchar la elipse hacia la izquierda
+    ellipse_center = (ellipse[0][0] - 15, ellipse[0][1])  # Mover el centro de la elipse hacia la izquierda
+    ellipse_size = (ellipse[1][0] + 15, ellipse[1][1] + 5)  # Ensanchar y estirar la elipse por orden
+
     # Crear máscara binaria de la copa óptica en la ROI
     mask_roi = np.zeros_like(edges, dtype=np.uint8)
-    cv2.ellipse(mask_roi, ellipse, 255, -1)
+    cv2.ellipse(mask_roi, (ellipse_center, ellipse_size, ellipse[2]), 255, -1)
 
     # Mapear la máscara de la ROI a la imagen completa
     x_start, y_start, width, height = roi_relative_coords
@@ -317,108 +316,60 @@ def segment_cup(original_image, roi_relative_coords, edges, image_name):
 
     # Dibujar la elipse en la imagen completa
     result_full = original_image.copy()
-    ellipse_mapped = ((ellipse[0][0] + x_start, ellipse[0][1] + y_start), ellipse[1], ellipse[2])
+    ellipse_mapped = ((ellipse_center[0] + x_start, ellipse_center[1] + y_start), ellipse_size, ellipse[2])
     cv2.ellipse(result_full, ellipse_mapped, (0, 255, 0), 2)
 
     # Visualización
-    # fig, axes = plt.subplots(1, 4, figsize=(25, 5))
+    fig, axes = plt.subplots(1, 4, figsize=(25, 5))
 
-    # axes[0].imshow(mask_roi, cmap='gray')
-    # axes[0].set_title('Máscara en ROI')
-    # axes[0].axis('off')
+    axes[0].imshow(mask_roi, cmap='gray')
+    axes[0].set_title('Máscara en ROI')
+    axes[0].axis('off')
 
-    # axes[1].imshow(mask_full, cmap='gray')
-    # axes[1].set_title('Máscara en imagen completa')
-    # axes[1].axis('off')
+    axes[1].imshow(mask_full, cmap='gray')
+    axes[1].set_title('Máscara en imagen completa')
+    axes[1].axis('off')
 
-    # axes[2].imshow(cv2.cvtColor(result_full, cv2.COLOR_BGR2RGB))
-    # axes[2].set_title('Copa en imagen completa')
-    # axes[2].axis('off')
+    axes[2].imshow(cv2.cvtColor(result_full, cv2.COLOR_BGR2RGB))
+    axes[2].set_title('Copa en imagen completa')
+    axes[2].axis('off')
 
-    # axes[3].imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
-    # axes[3].imshow(mask_full, alpha=0.5, cmap='gray')
-    # axes[3].set_title('Máscara superpuesta')
-    # axes[3].axis('off')
+    axes[3].imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
+    axes[3].imshow(mask_full, alpha=0.5, cmap='gray')
+    axes[3].set_title('Máscara superpuesta')
+    axes[3].axis('off')
 
     plt.show()
 
     return mask_full
 
 
+def compute_cdr(disc_mask, cup_mask):
+    """
+    Calculates the Cup-to-Disc Ratio (CDR) from the given disc and cup masks.
 
+    Args:
+        disc_mask (numpy.ndarray): Binary mask of the optic disc.
+        cup_mask (numpy.ndarray): Binary mask of the optic cup.
+    
+    Returns:
+        float: The calculated CDR value.
+    """
 
-# def segment_cup(roi, adjusted_image, image_name):
-#     """
-#     Segments the optic cup within the ROI.
+    # Calculate the bounding box of the disc and cup
+    disc_y_indices = np.where(disc_mask > 0)[0]
+    cup_y_indices = np.where(cup_mask > 0)[0]
 
-#     Args:
-#         roi (numpy.ndarray): Region of interest image.
-#         adjusted_image (numpy.ndarray): Image with adjusted contours.
-#         image_name (str): Name for visualization.
+    if len(disc_y_indices) == 0:
+        raise ValueError("Disc area is zero, cannot calculate CDR.")
+    if len(cup_y_indices) == 0:
+        raise ValueError("Cup area is zero, cannot calculate CDR.")
 
-#     Returns:
-#         numpy.ndarray: Optic cup mask.
-#     """
-#     # Canal verde invertido y mejorado
-#     green_channel = roi[:, :, 1] if roi.ndim == 3 else roi
-#     inverted_green = 255 - green_channel
-#     enhanced_green = cv2.GaussianBlur(inverted_green, (5, 5), 0)
-#     enhanced_green = cv2.addWeighted(enhanced_green, 0.0, inverted_green, 2, 0)
+    # Calculate the heights of the disc and cup
+    disc_height = disc_y_indices.max() - disc_y_indices.min()
+    cup_height = cup_y_indices.max() - cup_y_indices.min()
 
-#     # Operaciones morfológicas
-#     structuring_element = disk(15)
-#     closed_image = opening(enhanced_green, structuring_element).astype(np.uint8)
+    # Calculate the CDR
+    cdr = cup_height / disc_height
 
-#     # Umbralización y detección de bordes
-#     thresholded = cv2.adaptiveThreshold(closed_image, 200, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 33, 50)
-#     thresholded = cv2.bitwise_not(thresholded)
-#     edges = canny(thresholded, sigma=2.3)
-#     edges = (edges * 255).astype(np.uint8)
-#     closed_edges = closing(edges, disk(12))
-
-#     # Encontrar el contorno más grande
-#     contours, _ = cv2.findContours(closed_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#     max_contour = max(contours, key=cv2.contourArea)
-
-#     # Crear una máscara de la copa óptica
-#     mask_cup = np.zeros_like(roi)
-#     M = cv2.moments(max_contour)
-#     if M["m00"] != 0:
-#         cx = int(M["m10"] / M["m00"])
-#         cy = int(M["m01"] / M["m00"])
-#         distances = [np.sqrt((cx - pt[0][0])**2 + (cy - pt[0][1])**2) for pt in max_contour]
-#         max_distance = max(distances)
-
-#         if max_distance > 34:
-#             ellipse = cv2.fitEllipse(max_contour)
-#             cv2.ellipse(adjusted_image, ellipse, (0, 255, 255), 1)
-#             cv2.ellipse(mask_cup, ellipse, (255, 255, 255), -1)
-#         else:
-#             cv2.circle(adjusted_image, (cx, cy), int(max_distance), (0, 255, 255), 1)
-#             cv2.circle(mask_cup, (cx, cy), int(max_distance), (255, 255, 255), -1)
-
-#     mask_cup = cv2.cvtColor(mask_cup, cv2.COLOR_BGR2GRAY)
-
-#     # Visualización de pasos intermedios usando matplotlib
-#     fig, axes = plt.subplots(1, 4, figsize=(20, 5))
-#     fig.suptitle(image_name, fontsize=16)
-
-#     axes[0].imshow(inverted_green, cmap='gray')
-#     axes[0].set_title('Canal verde invertido')
-#     axes[0].axis('off')
-
-#     axes[1].imshow(enhanced_green, cmap='gray')
-#     axes[1].set_title('Realce')
-#     axes[1].axis('off')
-
-#     axes[2].imshow(closed_edges, cmap='gray')
-#     axes[2].set_title('Bordes detectados')
-#     axes[2].axis('off')
-
-#     axes[3].imshow(mask_cup, cmap='gray')
-#     axes[3].set_title('Máscara final de la copa')
-#     axes[3].axis('off')
-
-#     plt.show()
-
-#     return mask_cup
+    return cdr
